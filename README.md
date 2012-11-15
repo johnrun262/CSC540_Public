@@ -5,11 +5,16 @@ CSC540 Database Systems
 - Rob Parsons
 - John Lloyd
 
-Downloading git
+Project Reports
+----
+https://drive.google.com/a/ncsu.edu/#folders/0B1Ivyt8MAVJKSEVOTFdrS2Y0dkU
+
+Getting started with github
 ---------------
-https://help.github.com/articles/set-up-git#platform-all
+
+- Installing git, other github documentation 
+- https://help.github.com/articles/set-up-git#platform-all
 
 
-Using git
----------
-http://git-scm.com/documentation
+- git command documentation
+- http://git-scm.com/documentation

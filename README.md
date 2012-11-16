@@ -25,8 +25,10 @@ Using this Project
 
 Prereqs
 -------
-You need Apache Ant installed with the `ant` command on your PATH
-Shell script is used, so we're assuming that you will run command on a Linux/MacOSX system (we can assume the TAs are using Linux)
+You need Apache Ant installed with the `ant` command on your PATH.
+
+A shell script is used, so we're assuming that you will run command on a Linux/MacOSX system.
+I think it is fair to assume that TAs and Prof will be using Linux.
 
 Build
 -----

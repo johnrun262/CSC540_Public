@@ -18,3 +18,28 @@ Getting started with github
 
 - git command documentation
 - http://git-scm.com/documentation
+
+
+Using this Project
+====================
+
+Prereqs
+-------
+You need Apache Ant installed with the `ant` command on your PATH
+Shell script is used, so we're assuming that you will run command on a Linux/MacOSX system (we can assume the TAs are using Linux)
+
+Build
+-----
+Run the ant command from the same directory that contains `build.xml`
+	$ ant
+	...
+	BUILD SUCCESSFUL
+	Total time: 1 second
+	
+Running
+-------
+Once you've done a successful build, you can run the command as follows
+	$ cd dist
+	$ book.sh arg1 arg2 etc...
+
+

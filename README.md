@@ -33,10 +33,13 @@ I think it is fair to assume that TAs and Prof will be using Linux.
 Build
 -----
 Run the ant command from the same directory that contains `build.xml`
+
 	$ ant
 	...
 	BUILD SUCCESSFUL
 	Total time: 1 second
+	
+
 	
 Running
 -------

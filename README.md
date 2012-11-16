@@ -44,6 +44,8 @@ Run the ant command from the same directory that contains `build.xml`
 Running
 -------
 Once you've done a successful build, you can run the command as follows
+
+
 	$ cd dist
 	$ book.sh arg1 arg2 etc...
 

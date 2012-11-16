@@ -1,0 +1,51 @@
+<project name="BooksAThousand command" default="clean_dist" basedir=".">
+    <description>
+        simple build file
+    </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+  <property name="dist"  location="dist"/>
+
+  <target name="init">
+    <!-- Create the time stamp -->
+    <tstamp/>
+  	<echo message="Build started at ${DSTAMP} ${TSTAMP}"></echo>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${build}"/>
+  </target>
+
+  <!-- Compile the java code from ${src} into ${build} -->
+  <target name="compile" depends="init"
+        description="compile the source " >
+
+  	<!-- IF WE ADD NEW COMPILE DEPENDENCIES, INCLUDE JARS HERE -->
+    <javac srcdir="${src}" destdir="${build}"/>
+  	
+  </target>
+
+  <target name="dist" depends="compile"
+        description="generate the distribution" >
+    <!-- Create the distribution directory -->
+    <mkdir dir="${dist}/lib"/>
+  	
+    <!-- COPY NEW RUNTIME JARS INTO LIB AND ADD THEM TO CLASSPATH ARGUMENT IN books.sh -->
+  	
+    <!-- Put everything in ${build} into the a JAR file -->
+    <jar jarfile="${dist}/lib/BooksAThousand.jar" basedir="${build}"/>
+  	<copy file="books.sh" tofile="${dist}/books.sh"/>
+  	<chmod perm="+x" file="${dist}/books.sh"></chmod>
+  </target>
+
+  <target name="clean"
+        description="clean up" >
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+	
+	<!-- Clean then rebuild -->
+    <target name="clean_dist" depends="clean, dist">
+    </target>
+	
+</project>

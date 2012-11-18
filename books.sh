@@ -1,3 +1,2 @@
 #!/bin/bash
-clear
-java -cp lib/BooksAThousand.jar BooksCmd "$@"
+java -classpath "lib/classes12.zip":"lib/BooksAThousand.jar" BooksCmd "$@"

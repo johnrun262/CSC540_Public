@@ -17,10 +17,10 @@
 
   <!-- Compile the java code from ${src} into ${build} -->
   <target name="compile" depends="init"
-        description="compile the source " >
+        description="compile the source" >
 
   	<!-- IF WE ADD NEW COMPILE DEPENDENCIES, INCLUDE JARS HERE -->
-    <javac srcdir="${src}" destdir="${build}"/>
+    <javac srcdir="${src}" destdir="${build}" classpath="lib/classes12.zip"/>
   	
   </target>
 
@@ -30,6 +30,7 @@
     <mkdir dir="${dist}/lib"/>
   	
     <!-- COPY NEW RUNTIME JARS INTO LIB AND ADD THEM TO CLASSPATH ARGUMENT IN books.sh -->
+  	<copy file="lib/classes12.zip" tofile="${dist}/lib/classes12.zip"/>
   	
     <!-- Put everything in ${build} into the a JAR file -->
     <jar jarfile="${dist}/lib/BooksAThousand.jar" basedir="${build}"/>

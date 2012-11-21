@@ -1,2 +1,1 @@
-#!/bin/bash
-java -classpath "lib/classes12.zip":"lib/BooksAThousand.jar" BooksCmd "$@"
+java -classpath "lib\classes12.zip";"lib\BooksAThousand.jar" BooksCmd %1 %2 %3 %4 %5 %6 %7 %8 %9

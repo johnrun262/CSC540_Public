@@ -131,6 +131,7 @@ public class Vendor {
 
 		try {
 			// Get the last ID assigned and add one to it to create a new ID for this vendor
+			// TODO somehow lock others out of insert to prevent duplicate ID
 			String sql = "SELECT MAX(id) AS max FROM Vendor";
 
 			statement = connection.createStatement();

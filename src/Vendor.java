@@ -59,7 +59,7 @@ public class Vendor {
 			case ADD:
 				// Add a new vendor to the database
 
-				// TODO
+				return (addVendor(args));
 
 				break;
 
@@ -95,6 +95,7 @@ public class Vendor {
 
 	}
 
+	
 	private static void usage() {
 		System.out.println("Subcommand Required. Legal values:");
 		for (VendorCmds t : VendorCmds.values()) {

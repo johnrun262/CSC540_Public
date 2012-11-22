@@ -144,7 +144,7 @@ public class Vendor {
 			}
 
 			// Create and execute the INSERT SQL statement
-			// TODO address can be spread over multiple args
+			// TODO address can be spread over multiple args - may be working with quotes on cmd line
 			sql = "INSERT INTO Vendor VALUES ("+ newID +", '"+args[3]+"','"+args[2]+"','"+args[4]+"')";
 
 			statement = connection.createStatement();
@@ -161,7 +161,7 @@ public class Vendor {
 			return -1;
 		}
 
-	}
+	} // addVendor
 
 	/*
 	 * Method: allVendors
@@ -173,7 +173,7 @@ public class Vendor {
 	 * args[1] = "all" 
 	 *
 	 * Returns:
-	 * -1 = unknown report request
+	 * -1 = error processing request
 	 */
 	private int allVendors(String[] args) {
 		try {
@@ -200,7 +200,7 @@ public class Vendor {
 			return -1;
 		}	
 
-	}
+	} // allVendors
 
 
 	/*
@@ -244,7 +244,7 @@ public class Vendor {
 			return -1;
 		}
 
-	}
+	} // deleteVendor
 
 	/*
 	 * Method: listVendor
@@ -297,7 +297,7 @@ public class Vendor {
 			return -1;
 		}	
 
-	}
+	} // listVendor
 
 	/*
 	 * Method: updateVendor
@@ -306,7 +306,7 @@ public class Vendor {
 	 * 
 	 * Input:
 	 * args[0] = "vendor"
-	 * args[1] = "add"
+	 * args[1] = "update"
 	 * args[2] = <id> 
 	 * args[3] = <name>
 	 * args[4] = <phone>
@@ -335,7 +335,7 @@ public class Vendor {
 			statement.setQueryTimeout(10);
 			int cnt = statement.executeUpdate(sql);
 
-			// Tell the user the Vendor was inserted and the ID
+			// Tell the user the Book was inserted and the ID
 			System.out.println("Updated "+ cnt + " Vendor with ID " + args[2] + " in Database"); 
 
 			return 0;
@@ -345,7 +345,7 @@ public class Vendor {
 			return -1;
 		}
 
-	}
+	} // updateVendor
 	
 	
 	private static void usage() {

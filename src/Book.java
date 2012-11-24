@@ -15,7 +15,6 @@
  */
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
@@ -24,25 +23,16 @@ import java.sql.Statement;
 public class Book {
 
 	private Connection connection = null;
-	private Statement statement = null;
-	private ResultSet result = null;
 
+	// this is the list of commands that can be done to a book
 	private static enum BookCmds {ADD, ALL, DELETE, UPDATE, LIST, SELL};
 
 	// Constructor
 	Book(Connection connection){
 
+		// save the connection to the database
 		this.connection = connection; 
 
-		try {
-
-			// Create a statement instance that will be sending
-			// your SQL statements to the DBMS
-			this.statement = connection.createStatement();
-
-		} catch(Throwable oops) {
-			oops.printStackTrace();
-		}
 	}
 
 
@@ -116,6 +106,7 @@ public class Book {
 	 */
 	private int addBook(String[] args) {
 
+		Statement statement = null;
 		int newID = 4001;
 
 		// do we have enough parameters to continue?
@@ -172,6 +163,10 @@ public class Book {
 	 * -1 = error processing request
 	 */
 	private int allBooks(String[] args) {
+		
+		Statement statement = null;
+		int cnt = 0;
+		
 		try {
 			// Select all rows in the book table and sort by ID
 			String sql = "SELECT * FROM Book ORDER BY id";
@@ -182,20 +177,23 @@ public class Book {
 
 			// loop through the result set printing attributes
 			while (result.next()) {
+				cnt++;
 				int id = result.getInt("id");
 				String title = result.getString("title");
 				String author = result.getString("author");
 				int retailPrice = result.getInt("retailPrice");
 				int stockQuantity = result.getInt("stockQuantity");
-				System.out.println("ID: "+id+"\tTitle: "+title+"\tAuthor: "+author+"\tPrice: $"+retailPrice+"\tQty: "+stockQuantity);
+				System.out.println(cnt+"\tID: "+id+"\tTitle: "+title+"\tAuthor: "+author+"\tPrice: $"+retailPrice+"\tQty: "+stockQuantity);
 			}
+
+			System.out.println(cnt+" Row(s) Returned");
 
 			return 0;
 
 		} catch (Exception e) {
 			System.out.println("Exception Processing Command: " + e.getMessage());
 			return -1;
-		}	
+		}	 
 
 	} // allBooks
 
@@ -214,6 +212,8 @@ public class Book {
 	 */
 	private int deleteBook(String[] args) {
 
+		Statement statement = null;
+		
 		// do we have enough parameters to continue?
 		if (args.length < 3) {
 			System.out.println("Command Missing Parameters - usage: Book Delete <id>");
@@ -256,7 +256,8 @@ public class Book {
 	 * -1 = error retrieving Book
 	 */
 	private int listBook(String[] args) {
-
+		
+		Statement statement = null;
 		int cnt = 0;
 
 		// do we have enough parameters to continue?
@@ -276,12 +277,13 @@ public class Book {
 
 			// loop through the result set printing attributes
 			while (result.next()) {
+				cnt++;
 				int id = result.getInt("id");
 				String title = result.getString("title");
 				String author = result.getString("author");
 				int retailPrice = result.getInt("retailPrice");
 				int stockQuantity = result.getInt("stockQuantity");
-				System.out.println("ID: "+id+"\tTitle: "+title+"\tAuthor: "+author+"\tPrice: $"+retailPrice+"\tQty: "+stockQuantity);
+				System.out.println(cnt+"\tID: "+id+"\tTitle: "+title+"\tAuthor: "+author+"\tPrice: $"+retailPrice+"\tQty: "+stockQuantity);
 			}
 
 			System.out.println(cnt+" Row(s) Returned");
@@ -314,6 +316,8 @@ public class Book {
 	 */
 	private int updateBook(String[] args) {
 
+		Statement statement = null;
+		
 		// do we have enough parameters to continue?
 		if (args.length < 7) {
 			System.out.println("Command Missing Parameters - usage: Book Update <id> <title> <author> <retail price> <quantity>");

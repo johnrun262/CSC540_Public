@@ -24,27 +24,17 @@ import java.sql.Statement;
 public class Vendor {
 
 	private Connection connection = null;
-	private Statement statement = null;
-	private ResultSet result = null;
 
+	// this is the list of commands that can be done to a vendor
 	private static enum VendorCmds {ADD, ALL, DELETE, UPDATE, LIST};
 
 	// Constructor
 	Vendor(Connection connection){
 
+		// save the connection to the database
 		this.connection = connection; 
 
-		try {
-
-			// Create a statement instance that will be sending
-			// your SQL statements to the DBMS
-			this.statement = connection.createStatement();
-
-		} catch(Throwable oops) {
-			oops.printStackTrace();
-		}
 	}
-
 
 	/*
 	 * Method: exec
@@ -120,7 +110,8 @@ public class Vendor {
 	 * -1 = vendor not inserted
 	 */
 	private int addVendor(String[] args) {
-
+		
+		Statement statement = null;
 		int newID = 3001;
 
 		// do we have enough parameters to continue?
@@ -176,6 +167,10 @@ public class Vendor {
 	 * -1 = error processing request
 	 */
 	private int allVendors(String[] args) {
+		
+		Statement statement = null;
+		int cnt = 0;
+		
 		try {
 			// Select all rows in the vendor table and sort by ID
 			String sql = "SELECT * FROM Vendor ORDER BY id";
@@ -186,12 +181,15 @@ public class Vendor {
 
 			// loop through the result set printing attributes
 			while (result.next()) {
+				cnt++;
 				int id = result.getInt("id");
 				String name = result.getString("name");
 				String phone = result.getString("phone");
 				String address = result.getString("address");
-				System.out.println("ID: "+id+"\tName: "+name+"\tPhone: "+phone+"\tAddress: "+address);
+				System.out.println(cnt+"\tID: "+id+"\tName: "+name+"\tPhone: "+phone+"\tAddress: "+address);
 			}
+
+			System.out.println(cnt+" Row(s) Returned");
 
 			return 0;
 
@@ -218,6 +216,8 @@ public class Vendor {
 	 */
 	private int deleteVendor(String[] args) {
 
+		Statement statement = null;
+		
 		// do we have enough parameters to continue?
 		if (args.length < 3) {
 			System.out.println("Command Missing Parameters - usage: Vendor Delete <id>");
@@ -261,6 +261,7 @@ public class Vendor {
 	 */
 	private int listVendor(String[] args) {
 
+		Statement statement = null;
 		int cnt = 0;
 		
 		// do we have enough parameters to continue?
@@ -317,6 +318,8 @@ public class Vendor {
 	 */
 	private int updateVendor(String[] args) {
 
+		Statement statement = null;
+		
 		// do we have enough parameters to continue?
 		if (args.length < 6) {
 			System.out.println("Command Missing Parameters - usage: Vendor Update <id> <name> <phone> <address>");

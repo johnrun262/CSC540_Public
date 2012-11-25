@@ -14,347 +14,144 @@
  * 
  */
 
+import java.util.HashMap;
+import java.util.Map;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.SQLException;
 
 
 
-public class Vendor {
+public class Vendor extends AbstractCommandHandler {
 
-	private Connection connection = null;
+  private static String TABLE = "Vendor";
+  
+	/*
+   * Contruct a handler for vendor objects.
+   */
+	public Vendor(Connection connection) { 
+    super(connection);
+  }
 
-	// this is the list of commands that can be done to a vendor
-	private static enum VendorCmds {ADD, ALL, DELETE, UPDATE, LIST};
+	/**
+	 * Execute the command to create a vendor.
+	 * 
+   * @param name
+   *   The vendor name
+   * @param phone
+   *   The vendor phone
+   * @param address
+   *   The vendor address.
+	 */
+	public void execAdd(
+    @Param("name") String name, 
+    @Param("phone") String phone, 
+    @Param("address") String address) throws SQLException {
 
-	// Constructor
-	Vendor(Connection connection){
-
-		// save the connection to the database
-		this.connection = connection; 
-
+    Map<String, Object> params = new HashMap<String, Object>();
+    params.put("name", name);
+    params.put("phone", phone);
+    params.put("address", address);
+    
+    int newID = insertRow(TABLE, "id", 3001, params);
+    
+    System.out.println("Inserted Vendor with ID " + newID + " into Database"); 
+    
 	}
 
-	/*
-	 * Method: exec
-	 * 
-	 * Execute commands manipulating vendors
-	 * 
-	 * Input:
-	 * args[0] = "vendor"
-	 * args[1] = "add" | "all" | "delete" | "update" | "list"
-	 * 
-	 * Returns:
-	 * -1 = unknown report request
+  /**
+	 * List all vendors in the system, ordered by the vendor id.
 	 */
+	public void execAll() throws SQLException {
+  
+    // Select all rows in the vendor table and sort by ID
+    String sql = "SELECT * FROM " + TABLE + " ORDER BY id";
 
-	public int exec(String[] args){
+    Statement statement = createStatement();
+    int cnt = displayVendors(statement.executeQuery(sql));
 
-		if (args.length < 2){
-			usage();
-			return -1;
-		}
+    System.out.println(cnt+" Row(s) Returned");
+    
+	}
+  
+	/**
+	 * Delete the specified vendor
+   *
+   * @param id
+   *   The vendor id. Must be convertable to an integer.
+	 */
+	public void execDelete(@Param("vendor id") String id) throws SQLException {
 
-		try {
-			switch (VendorCmds.valueOf(args[1].toUpperCase())) {
-			case ADD:
-				// Add a new vendor to the database
+    int count = deleteRow(TABLE, Integer.parseInt(id));
 
-				return (addVendor(args));
-
-			case ALL:
-				// Print all vendors in the database
-
-				return (allVendors(args));
-
-			case DELETE:
-				// Remove a vendor from the database
-
-				return (deleteVendor(args));
-
-			case UPDATE:
-				// Update a vendor already in the database
-
-				return (updateVendor(args));
-
-			case LIST:
-				// List information about a vendor already in the the database
-
-				return (listVendor(args));
-
-			} // switch
-
-		} catch (IllegalArgumentException e) {
-			usage();
-			return -1;
-		}
-
-		return 0;
-
+    System.out.println("Deleted "+ count + " Vendor with ID " + id + " from Database"); 
+    
 	}
 
-	/*
-	 * Method: addVendor
-	 * 
-	 * Execute the command to create vendors
-	 * 
-	 * Input:
-	 * args[0] = "vendor"
-	 * args[1] = "add" 
-	 * args[2] = <name>
-	 * args[3] = <phone>
-	 * args[4] = <address>
-	 *
-	 * Returns:
-	 * -1 = vendor not inserted
+	/**
+	 * Display the properties of a specific vendor.
+   *
+   * @param id
+   *   The vendor id. Must be convertable to an integer.
 	 */
-	private int addVendor(String[] args) {
+	public void execList(@Param("vendor id") String id) throws SQLException {
 		
-		Statement statement = null;
-		int newID = 3001;
+    // Select row in the Vendor table with ID
+    String sql = "SELECT * FROM " + TABLE + " WHERE id = "+ Integer.parseInt(id);
 
-		// do we have enough parameters to continue?
-		if (args.length < 5) {
-			System.out.println("Command Missing Parameters - usage: Vendor Add <name> <phone> <address>");
-			return -1;
-		}
+    Statement statement = createStatement();
+    int cnt = displayVendors(statement.executeQuery(sql));
 
-		try {
-			// Get the last ID assigned and add one to it to create a new ID for this vendor
-			// TODO somehow lock others out of insert to prevent duplicate ID
-			String sql = "SELECT MAX(id) AS max FROM Vendor";
+    System.out.println(cnt+" Row(s) Returned");
 
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				newID = result.getInt("max");
-				newID++;
-			}
-
-			// Create and execute the INSERT SQL statement
-			// TODO address can be spread over multiple args - may be working with quotes on cmd line
-			sql = "INSERT INTO Vendor VALUES ("+ newID +", '"+args[3]+"','"+args[2]+"','"+args[4]+"')";
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			int cnt = statement.executeUpdate(sql);
-
-			// Tell the user the Vendor was inserted and the ID
-			System.out.println("Inserted "+ cnt + " Vendor with ID " + newID + " into Database"); 
-
-			return 0;
-
-		} catch (Exception e) {
-			System.out.println("Exception Processing Command: " + e.getMessage());
-			return -1;
-		}
-
-	} // addVendor
-
-	/*
-	 * Method: allVendors
-	 * 
-	 * Execute the command to dump vendors
-	 * 
-	 * Input:
-	 * args[0] = "vendor"
-	 * args[1] = "all" 
+	}
+  
+		/**
+	 * Update a Cendor with ID with the given values
 	 *
-	 * Returns:
-	 * -1 = error processing request
+   * @param id
+   *   The vendor id. Must be convertable to an integer.
+   * @param name
+   *   The vendor name
+   * @param phone
+   *   The vendor phone
+   * @param address
+   *   The vendor address.
 	 */
-	private int allVendors(String[] args) {
-		
-		Statement statement = null;
-		int cnt = 0;
-		
-		try {
-			// Select all rows in the vendor table and sort by ID
-			String sql = "SELECT * FROM Vendor ORDER BY id";
+	public void execUpdate(
+    @Param("vendor id") String id, 
+    @Param("name") String name, 
+    @Param("phone") String phone, 
+    @Param("address") String address) throws SQLException {
 
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
+    Map<String, Object> params = new HashMap<String, Object>();
+    params.put("name", name);
+    params.put("phone", phone);
+    params.put("address", address);
 
-			// loop through the result set printing attributes
-			while (result.next()) {
-				cnt++;
-				int id = result.getInt("id");
+    updateRow(TABLE, "id", Integer.parseInt(id), params);
+
+    System.out.println("Updated Vendor with ID " + id + " in Database"); 
+	}
+  
+  /**
+   * Display the vendors from the result set and return the total count.
+   */
+  private int displayVendors(ResultSet result) throws SQLException {
+  
+    int cnt = 0;
+    // loop through the result set printing attributes
+    while (result.next()) {
+      cnt++;
+      int id = result.getInt("id");
 				String name = result.getString("name");
 				String phone = result.getString("phone");
 				String address = result.getString("address");
 				System.out.println(cnt+"\tID: "+id+"\tName: "+name+"\tPhone: "+phone+"\tAddress: "+address);
-			}
-
-			System.out.println(cnt+" Row(s) Returned");
-
-			return 0;
-
-		} catch (Exception e) {
-			System.out.println("Exception Processing Command: " + e.getMessage());
-			return -1;
-		}	
-
-	} // allVendors
-
-
-	/*
-	 * Method: deleteVendor
-	 * 
-	 * Execute the command to delete a vendor by ID
-	 * 
-	 * Input:
-	 * args[0] = "vendor"
-	 * args[1] = "delete" 
-	 * args[2] = <id>
-	 *
-	 * Returns:
-	 * -1 = vendor not deleted
-	 */
-	private int deleteVendor(String[] args) {
-
-		Statement statement = null;
-		
-		// do we have enough parameters to continue?
-		if (args.length < 3) {
-			System.out.println("Command Missing Parameters - usage: Vendor Delete <id>");
-			return -1;
-		}
-
-		try { 
-
-			// Create and execute the DELETE SQL statement
-			// TODO validate id numeric
-			String sql = "DELETE FROM Vendor WHERE id="+args[2];
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			int cnt = statement.executeUpdate(sql);
-
-			// Tell the user the Vendor was inserted and the ID
-			System.out.println("Deleted "+ cnt + " Vendor with ID " + args[2] + " from Database"); 
-
-			return 0;
-
-		} catch (Exception e) {
-			System.out.println("Exception Processing Command: " + e.getMessage());
-			return -1;
-		}
-
-	} // deleteVendor
-
-	/*
-	 * Method: listVendor
-	 * 
-	 * Execute the command to list info about a vendor given ID
-	 * 
-	 * Input:
-	 * args[0] = "vendor"
-	 * args[1] = "list"
-	 * args[2] = <id> 
-	 *
-	 * Returns:
-	 * -1 = error retrieving vendor
-	 */
-	private int listVendor(String[] args) {
-
-		Statement statement = null;
-		int cnt = 0;
-		
-		// do we have enough parameters to continue?
-		if (args.length < 3) {
-			System.out.println("Command Missing Parameters - usage: Vendor List <id>");
-			return -1;
-		}
-
-		try {
-			// Select row in the vendor table with ID
-			// TODO is ID numeric?
-			String sql = "SELECT * FROM Vendor WHERE id = "+ args[2];
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			// loop through the result set printing attributes
-			while (result.next()) {
-				cnt++;
-				int id = result.getInt("id");
-				String name = result.getString("name");
-				String phone = result.getString("phone");
-				String address = result.getString("address");
-				System.out.println("ID: "+id+"\tName: "+name+"\tPhone: "+phone+"\tAddress: "+address);
-			}
-
-			System.out.println(cnt+" Row(s) Returned");
-			
-			return 0;
-
-		} catch (Exception e) {
-			System.out.println("Exception Processing Command: " + e.getMessage());
-			return -1;
-		}	
-
-	} // listVendor
-
-	/*
-	 * Method: updateVendor
-	 * 
-	 * Execute the command to update vendor with ID with the given values
-	 * 
-	 * Input:
-	 * args[0] = "vendor"
-	 * args[1] = "update"
-	 * args[2] = <id> 
-	 * args[3] = <name>
-	 * args[4] = <phone>
-	 * args[5] = <address>
-	 *
-	 * Returns:
-	 * -1 = vendor not updated
-	 */
-	private int updateVendor(String[] args) {
-
-		Statement statement = null;
-		
-		// do we have enough parameters to continue?
-		if (args.length < 6) {
-			System.out.println("Command Missing Parameters - usage: Vendor Update <id> <name> <phone> <address>");
-			return -1;
-		}
-
-		try {
-
-			// Create and execute the UPDATE SQL statement
-			// TODO don't require update of all attributes
-			// TODO address may span multiple args
-			String sql = "UPDATE Vendor SET name='" + args[3]+"', phone='"+args[4]+"', address='"+args[5]+"' "+
-				"WHERE id="+args[2];
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			int cnt = statement.executeUpdate(sql);
-
-			// Tell the user the Book was inserted and the ID
-			System.out.println("Updated "+ cnt + " Vendor(s) with ID " + args[2] + " in Database"); 
-
-			return 0;
-
-		} catch (Exception e) {
-			System.out.println("Exception Processing Command: " + e.getMessage());
-			return -1;
-		}
-
-	} // updateVendor
-	
-	
-	private static void usage() {
-		System.out.println("Subcommand Required. Legal values:");
-		for (VendorCmds t : VendorCmds.values()) {
-			System.out.println(t.toString());
-		}
-	}
+    }
+    return cnt;
+    
+  }
 
 }

@@ -116,15 +116,6 @@ public class BooksCmd {
 
 				break;
 
-			case VENDOR:
-
-				Vendor vendor = new Vendor(connection); 
-				if (vendor.exec(args) == -1){
-					System.out.println("Invalid Vendor request!");
-				}
-
-				break;
-
 			} // switch
 
 		} catch (IllegalArgumentException e) {

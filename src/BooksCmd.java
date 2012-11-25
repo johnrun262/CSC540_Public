@@ -115,15 +115,6 @@ public class BooksCmd {
 				}
 
 				break;
-				
-			case STAFF:
-
-				Staff staff = new Staff(connection); 
-				if (staff.exec(args) == -1){
-					System.out.println("Invalid Staff request!");
-				}
-
-				break;
 
 			case VENDOR:
 

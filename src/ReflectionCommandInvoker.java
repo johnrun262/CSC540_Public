@@ -29,6 +29,7 @@ public class ReflectionCommandInvoker {
   
   private static Class[] operationClasses = new Class[] {
     Book.class,
+    Staff.class
   };
   
   private Connection connection;

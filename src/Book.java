@@ -65,7 +65,7 @@ public class Book extends AbstractCommandHandler {
 	public void execAll() throws SQLException {
   
     // Select all rows in the book table and sort by ID
-    String sql = "SELECT * FROM Book ORDER BY id";
+    String sql = "SELECT * FROM " + TABLE + " ORDER BY id";
 
     Statement statement = createStatement();
     int cnt = displayBooks(statement.executeQuery(sql));
@@ -97,7 +97,7 @@ public class Book extends AbstractCommandHandler {
 	public void execList(@Param("book id") String id) throws SQLException {
 		
     // Select row in the Book table with ID
-    String sql = "SELECT * FROM Book WHERE id = "+ Integer.parseInt(id);
+    String sql = "SELECT * FROM " + TABLE + " WHERE id = "+ Integer.parseInt(id);
 
     Statement statement = createStatement();
     int cnt = displayBooks(statement.executeQuery(sql));

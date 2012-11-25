@@ -161,4 +161,32 @@ public class AbstractCommandHandler {
     // Execute that sucker!
     return updateStatement.executeUpdate();  
   }
+  
+  /**
+   * Validate a code by looking up in valid values. Throws ValidationException if not found.
+   *
+   * @param code
+   *   The code to validate
+   * @param description
+   *   The code description
+   * @param valid
+   *   A map of {code, description}
+   * @return The string description if found.
+   */
+  protected String validateCode(String code, String description, Map<String, String> valid) throws ValidationException {
+    String upValue = code.toUpperCase();
+    
+    if (!valid.containsKey(upValue)) {
+      String msg = "";
+      for (Map.Entry<String, String> value : valid.entrySet()) {
+        if (msg.length() > 0) msg += ", ";
+        msg += value.getKey() + ":(" + value.getValue() + ")";
+      }
+      msg = "Invalid " + description + " - Valid values are: " + msg;
+      
+      throw new ValidationException(msg);
+    }
+    
+    return valid.get(upValue);
+  }
 }

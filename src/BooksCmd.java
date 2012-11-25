@@ -27,9 +27,9 @@ public class BooksCmd {
 
 	// Put your oracle ID and password here
 	private static final String user = "jlloyd";
-	private static final String password = "xxxxxx";
+	private static final String password = "xxxx";
 
-	private static enum Operations {BILLING, BOOK, CUSTOMER, PURCHASE, REPORT, STAFF, VENDOR};
+	private static enum Operations {BILLING, BOOK, CUSTOMER, PURCHASE, REPORT, SALE, STAFF, VENDOR};
 
 	public static void main(String[] args) {
 
@@ -111,7 +111,16 @@ public class BooksCmd {
 				}
 
 				break;
+				
+			case SALE:
 
+				Sale sale = new Sale(connection); 
+				if (sale.exec(args) == -1){
+					System.out.println("Invalid Sale request!");
+				}
+
+				break;
+				
 			case STAFF:
 
 				Staff staff = new Staff(connection); 

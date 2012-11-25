@@ -25,7 +25,7 @@ public class Book {
 	private Connection connection = null;
 
 	// this is the list of commands that can be done to a book
-	private static enum BookCmds {ADD, ALL, DELETE, UPDATE, LIST, SELL};
+	private static enum BookCmds {ADD, ALL, DELETE, UPDATE, LIST};
 
 	// Constructor
 	Book(Connection connection){
@@ -70,13 +70,6 @@ public class Book {
 				// List information about a book already in the the database
 
 				return (listBook(args));
-
-			case SELL:
-				// Sell a customer some number of books
-
-				// TODO
-
-				break;
 
 			} // switch
 
@@ -338,7 +331,7 @@ public class Book {
 			int cnt = statement.executeUpdate(sql);
 
 			// Tell the user the Book was updated
-			System.out.println("Updated "+ cnt + " Book with ID " + args[2] + " in Database"); 
+			System.out.println("Updated "+ cnt + " Book(s) with ID " + args[2] + " in Database"); 
 
 			return 0;
 

@@ -1,6 +1,6 @@
 /*****************************************************************************************
  * 
- * Purchase.java
+ * Sale.java
  *  
  * Aaron Averill
  * John Lloyd
@@ -10,30 +10,29 @@
  * CSC 540
  * Fall 2012
  * 
- * Purchase.java processes purchases for books from a vendor.
+ * Sale.java manages sales to a customer
  * 
  */
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
 
 
-public class Purchase {
+public class Sale {
 
 	private Connection connection = null;
 
-	private static enum PurchaseCmds {ADD, DELETE, LIST, UPDATE};
+	// this is the list of commands that can be done to a sale
+	private static enum SaleCmds {ADD, DELETE, LIST, UPDATE};
 
 	// Constructor
-	Purchase(Connection connection){
+	Sale(Connection connection){
 
 		this.connection = connection; 
 
 	}
-
 
 
 	public int exec(String[] args){
@@ -44,30 +43,30 @@ public class Purchase {
 		}
 
 		try {
-			switch (PurchaseCmds.valueOf(args[1].toUpperCase())) {
+			switch (SaleCmds.valueOf(args[1].toUpperCase())) {
 			case ADD:
-				// create a new purchase from a vendor
+				// create a new sale to a customer
 
 				// TODO
 
 				break;
 
 			case DELETE:
-				// delete a purchase made from a vendor
+				// delete a sale
 
 				// TODO
 
 				break;
 
 			case LIST:
-				// list purchases made from a vendor
+				// list a sale to a customer
 
 				// TODO
 
 				break;
 
 			case UPDATE:
-				// Update a purchase made from a vendor
+				// Update a sale to a customer
 
 				// TODO
 
@@ -86,7 +85,7 @@ public class Purchase {
 
 	private static void usage() {
 		System.out.println("Subcommand Required. Legal values:");
-		for (PurchaseCmds t : PurchaseCmds.values()) {
+		for (SaleCmds t : SaleCmds.values()) {
 			System.out.println(t.toString());
 		}
 	}

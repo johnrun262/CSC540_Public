@@ -426,7 +426,7 @@ public class Customer {
 			int cnt = statement.executeUpdate(sql);
 
 			// Tell the user the Book was inserted and the ID
-			System.out.println("Updated "+ cnt + " Vendor with ID " + args[2] + " in Database"); 
+			System.out.println("Updated "+ cnt + " Customer(s) with ID " + args[2] + " in Database"); 
 
 			return 0;
 

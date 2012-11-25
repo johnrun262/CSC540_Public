@@ -71,9 +71,16 @@ public class Staff extends AbstractCommandHandler {
     @Param("salary") String salary,
     @Param("work location") String workLoc) throws ValidationException, SQLException {
 
+    Double salaryValue = null;
 		// validate input parameters
     try {
-      validateAll(gender, dob, salary, jobTitle, dept, workLoc);
+      gender = checkGender(gender);
+      salaryValue = checkSalary(salary);
+      checkDateOfBirth(dob);
+      // The following are enforced by the schema but can also be checked here to give the user a better error message
+      jobTitle = checkTitle(jobTitle);
+      dept = checkDept(dept);
+      workLoc = checkLoc(workLoc);
     } catch (ValidationException ex) {
       System.out.println("Validation Error: " + ex.getMessage());
       System.exit(-1);
@@ -85,7 +92,7 @@ public class Staff extends AbstractCommandHandler {
     params.put("dob", dob);
     params.put("jobTitle", jobTitle);
     params.put("department", dept);
-    params.put("salary", Double.parseDouble(salary));
+    params.put("salary", salaryValue);
     params.put("phone", phone);
     params.put("address", address);
     params.put("workLocation", workLoc);
@@ -178,9 +185,16 @@ public class Staff extends AbstractCommandHandler {
     @Param("salary") String salary,
     @Param("work location") String workLoc) throws ValidationException, SQLException {
 
+    Double salaryValue = null;
 		// validate input parameters
     try {
-      validateAll(gender, dob, salary, jobTitle, dept, workLoc);
+      gender = checkGender(gender);
+      salaryValue = checkSalary(salary);
+      checkDateOfBirth(dob);
+      // The following are enforced by the schema but can also be checked here to give the user a better error message
+      jobTitle = checkTitle(jobTitle);
+      dept = checkDept(dept);
+      workLoc = checkLoc(workLoc);
     } catch (ValidationException ex) {
       System.out.println("Validation Error: " + ex.getMessage());
       System.exit(-1);
@@ -192,46 +206,26 @@ public class Staff extends AbstractCommandHandler {
     params.put("dob", dob);
     params.put("jobTitle", jobTitle);
     params.put("department", dept);
-    params.put("salary", Double.parseDouble(salary));
+    params.put("salary", salaryValue);
     params.put("phone", phone);
     params.put("address", address);
     params.put("workLocation", workLoc);
 
     updateRow(TABLE, "id", Integer.parseInt(id), params);
 
+    System.out.println("Updated Staff with ID " + id + " in Database"); 
+
 	}
 
   /**
-   * Perform validation on all fields. Useful for insert and update. Throw a ValidationException if there is an error.
+   * Check the date of birth. Throw a ValidationException if there is an error.
    *
-   * @param gender
-   *   The staff's gender. Either "M" or "F".
+   * Must be a parseable date.
+   *
    * @param dob
-   *   The staff's date of birth
-   * @param salary
-   *   The staff's salary. Must be convertable to a double.
-   * @param jobTitle
-   *   The staff's job title
-   * @param dept
-   *   The staff's work department
-   * @param workLoc
-   *   The staff's work location
+   *   The staff's date of birth.
    */
-  private void validateAll(
-    String gender,
-    String dob,
-    String salary,
-    String jobTitle,
-    String dept,
-    String workLoc
-  ) throws ValidationException {
-    // gender should be F or M
-    if (gender.equalsIgnoreCase("F") || gender.equalsIgnoreCase("M")) {
-      gender = gender.toUpperCase();
-    } else {
-      throw new ValidationException("Gender must equal F or M: " + gender);
-    }
-
+  private void checkDateOfBirth(String dob) throws ValidationException {
     // validate date of birth
     try {
       SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
@@ -240,39 +234,51 @@ public class Staff extends AbstractCommandHandler {
     } catch (Exception e) {
       throw new ValidationException("Invalid Format Date of Birth: expecting dd-MMM-yyyy (ex 12-dec-1960) found "+dob);
     }
-
-    // The following are enforced by the schema but can also be checked here to give the user a better error message
-
-    // check salary numeric and > 0
+  }
+  
+  /**
+   * Check the salary. Throw a ValidationException if there is an error.
+   *
+   * Must be a parseable double greater than zero.
+   *
+   * @param salary
+   *   The staff's salary.
+   */
+  private double checkSalary(String salary) throws ValidationException {
     try {
-      if (Integer.parseInt(salary) <= 0) {
+      double salaryValue = Double.parseDouble(salary);
+      if (salaryValue <= 0) {
         throw new ValidationException("Salary must be greater than zero");
       }
+      return salaryValue;
     } catch (Exception e) {
       throw new ValidationException("Salary must be a number");
     }
-
-    // jobTitle must be Salesperson, Procurement, Accounting, Management
-    if ((jobTitle = checkTitle(jobTitle)) == null) {
-      throw new ValidationException("Invalid job title");
+  }
+  
+  /**
+   * Check the gender passed from user is valid. Throw a ValidationException if there is an error.
+   *
+   * Must be one of: M or F.
+   *
+   * @param gender
+   *   The staff's gender
+   */
+  private String checkGender(String gender) throws ValidationException {
+    if (gender.equalsIgnoreCase("F") || gender.equalsIgnoreCase("M")) {
+      return gender.toUpperCase();
+    } else {
+      throw new ValidationException("Gender must equal F or M: " + gender);
     }
-
-    // department must be Sales, Procurement, Accounting, Warehouse, Management, Accounting
-    if ((dept = checkDept(dept)) == null) {
-      throw new ValidationException("Invalid department");
-    }
-    
-    // Work Location must be "Southpoint, Northgate, Airport Mall, Concord Mills, Jungle Jims, warehouse, HQ
-    if ((workLoc = checkLoc(workLoc)) == null) {
-      throw new ValidationException("Invalid work location");
-    }
-
   }
   
 	/**
    * Check the job title passed from user is valid. Throw a ValidationException if there is an error.
+   *
+   * Must be one of: Salesperson, Procurement, Accounting, Management
+   *
    * @param jobTitle
-   *   The staff's job title
+   *   The staff's job title.
    */
 	private String checkTitle(String jobTitle) throws ValidationException {
 
@@ -289,6 +295,9 @@ public class Staff extends AbstractCommandHandler {
 
 	/**
    * Check the department passed from user is valid. Throw a ValidationException if there is an error.
+   *
+   * Must be one of: Sales, Procurement, Accounting, Warehouse, Management, Accounting
+   *
    * @param dept
    *   The staff's work department
    */
@@ -307,6 +316,9 @@ public class Staff extends AbstractCommandHandler {
 
 	/**
    * Check the work location passed from user is valid. Throw a ValidationException if there is an error.
+   *
+   * Must be one of: Southpoint, Northgate, Airport Mall, Concord Mills, Jungle Jims, warehouse, HQ
+   *
    * @param loc
    *   The staff's work location
    */

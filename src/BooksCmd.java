@@ -63,6 +63,10 @@ public class BooksCmd {
 				System.exit(-1);
 			}
 
+      if (invokeViaReflection(connection, args)) {
+        return;
+      }
+      
 			// switch on the command type and then create a member of 
 			// that class to handle the request.
 			switch (Operations.valueOf(args[0].toUpperCase())) {
@@ -72,15 +76,6 @@ public class BooksCmd {
 				Billing billing = new Billing(connection); 
 				if (billing.exec(args) == -1){
 					System.out.println("Invalid Billing request!");
-				}
-
-				break;
-
-			case BOOK:
-
-				Book book = new Book(connection); 
-				if (book.exec(args) == -1){
-					System.out.println("Invalid Book request!");
 				}
 
 				break;
@@ -117,15 +112,6 @@ public class BooksCmd {
 				Sale sale = new Sale(connection); 
 				if (sale.exec(args) == -1){
 					System.out.println("Invalid Sale request!");
-				}
-
-				break;
-				
-			case STAFF:
-
-				Staff staff = new Staff(connection); 
-				if (staff.exec(args) == -1){
-					System.out.println("Invalid Staff request!");
 				}
 
 				break;
@@ -174,5 +160,9 @@ public class BooksCmd {
 
 	} // close
 
+  static boolean invokeViaReflection(Connection connection, String[] args) throws Exception {
+    ReflectionCommandInvoker invoker = new ReflectionCommandInvoker(connection);
+    return invoker.execute(args);
+  }
 
 } // BooksCmd

@@ -135,6 +135,7 @@ public class Book extends AbstractCommandHandler {
 
     updateRow(TABLE, "id", Integer.parseInt(id), params);
 
+    System.out.println("Updated Book with ID " + id + " in Database"); 
 	}
 	
   /**

@@ -80,15 +80,6 @@ public class BooksCmd {
 
 				break;
 
-			case CUSTOMER:
-
-				Customer cust = new Customer(connection); 
-				if (cust.exec(args) == -1){
-					System.out.println("Invalid Customer request!");
-				}
-
-				break;
-
 			case PURCHASE:
 
 				Purchase pur = new Purchase(connection);
@@ -120,6 +111,7 @@ public class BooksCmd {
 
 		} catch (IllegalArgumentException e) {
 			usage();
+      e.printStackTrace();
 		} catch(Throwable oops) {
 			// print a stack trace if something goes wrong
 			oops.printStackTrace();

@@ -15,15 +15,15 @@
  * 
  */
 
-import java.util.HashMap;
-import java.util.TreeMap;
-import java.util.Map;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
+
 
 
 
@@ -74,9 +74,9 @@ public class Staff extends AbstractCommandHandler {
     Double salaryValue = null;
 		// validate input parameters
     try {
-      gender = checkGender(gender);
+      gender = ValidationHelpers.checkGender(gender);
       salaryValue = checkSalary(salary);
-      checkDateOfBirth(dob);
+      ValidationHelpers.checkDateOfBirth(dob);
       // The following are enforced by the schema but can also be checked here to give the user a better error message
       jobTitle = checkTitle(jobTitle);
       dept = checkDept(dept);
@@ -188,9 +188,9 @@ public class Staff extends AbstractCommandHandler {
     Double salaryValue = null;
 		// validate input parameters
     try {
-      gender = checkGender(gender);
+      gender = ValidationHelpers.checkGender(gender);
       salaryValue = checkSalary(salary);
-      checkDateOfBirth(dob);
+      ValidationHelpers.checkDateOfBirth(dob);
       // The following are enforced by the schema but can also be checked here to give the user a better error message
       jobTitle = checkTitle(jobTitle);
       dept = checkDept(dept);
@@ -217,25 +217,6 @@ public class Staff extends AbstractCommandHandler {
 
 	}
 
-  /**
-   * Check the date of birth. Throw a ValidationException if there is an error.
-   *
-   * Must be a parseable date.
-   *
-   * @param dob
-   *   The staff's date of birth.
-   */
-  private void checkDateOfBirth(String dob) throws ValidationException {
-    // validate date of birth
-    try {
-      SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
-      format.parse(dob);
-      // TODO check year is say >1900
-    } catch (Exception e) {
-      throw new ValidationException("Invalid Format Date of Birth: expecting dd-MMM-yyyy (ex 12-dec-1960) found "+dob);
-    }
-  }
-  
   /**
    * Check the salary. Throw a ValidationException if there is an error.
    *

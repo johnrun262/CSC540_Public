@@ -36,6 +36,11 @@ public class AbstractCommandHandler {
     this.connection = connection;
   }
   
+  protected void exitProgram(String error) {
+    System.out.println(error);
+    System.exit(-1);
+  }
+  
   /**
    * Create a statement and set the default timeout.
    */
@@ -85,9 +90,31 @@ public class AbstractCommandHandler {
    * @return The id of the newly inserted record.
    */
   protected int insertRow(String table, String idColumn, int defaultId, Map<String, Object> params) throws SQLException {
+    return insertRow(table, idColumn, defaultId, params, false);
+  }
   
-    // Set the transaction isolation to prevent row duplicates
-    connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+  /**
+   * Insert a row in the specified table.
+   *
+   * @param table
+   *   The table to insert into
+   * @param idColumn
+   *   The name of the column that the has the row id
+   * @param defaultId
+   *   The default starting id if no rows exist
+   * @param params
+   *   A map of {column name, value} of values to insert for the row
+   * @param insideTransaction
+   *   If true, no transaction calls are made.
+   * @return The id of the newly inserted record.
+   */
+  protected int insertRow(String table, String idColumn, int defaultId, Map<String, Object> params, boolean insideTransaction) throws SQLException {
+  
+    if (!insideTransaction) {
+      // Set the transaction isolation to prevent row duplicates
+      connection.setAutoCommit(false);
+      connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+    }
     
     // Get the last ID assigned and add one to it to create a new ID for this row
     String sql = "SELECT MAX(" + idColumn + ") AS max FROM " + table;
@@ -123,6 +150,10 @@ public class AbstractCommandHandler {
     
     // Execute that sucker!
     insertStatement.executeUpdate();
+    
+    if (!insideTransaction) {
+      connection.commit();
+    }
     
     return newID;
   }
@@ -161,6 +192,14 @@ public class AbstractCommandHandler {
     
     // Execute that sucker!
     return updateStatement.executeUpdate();  
+  }
+  
+  protected int getRowCount(String table, String whereClause) throws SQLException {
+    Statement statement = createStatement();
+    String sql = "SELECT COUNT(*) AS count FROM " + table + " WHERE " + whereClause;
+    ResultSet result = statement.executeQuery(sql);
+    result.next();
+    return result.getInt("count");
   }
   
   /**

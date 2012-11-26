@@ -14,17 +14,18 @@
  * 
  */
 
-import java.util.HashMap;
-import java.util.Map;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class Book extends AbstractCommandHandler {
 
-  private static String TABLE = "Book";
+  public static String TABLE = "Book";
   
 	/*
    * Contruct a handler for book objects.
@@ -152,7 +153,14 @@ public class Book extends AbstractCommandHandler {
       String author = result.getString("author");
       Double retailPrice = result.getDouble("retailPrice");
       int stockQuantity = result.getInt("stockQuantity");
-      System.out.println(cnt+"\tID: "+id+"\tTitle: "+title+"\tAuthor: "+author+"\tPrice: $"+retailPrice+"\tQty: "+stockQuantity);
+      System.out.println(
+        cnt+
+        "\tID: "+id+
+        "\tTitle: "+title+
+        "\tAuthor: "+author+
+        "\tPrice: $"+new DecimalFormat("0.00").format(retailPrice)+
+        "\tQty: "+stockQuantity
+      );
     }
     return cnt;
     

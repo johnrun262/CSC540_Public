@@ -89,15 +89,6 @@ public class BooksCmd {
 
 				break;
 				
-			case SALE:
-
-				Sale sale = new Sale(connection); 
-				if (sale.exec(args) == -1){
-					System.out.println("Invalid Sale request!");
-				}
-
-				break;
-
 			} // switch
 
 		} catch (IllegalArgumentException e) {

@@ -99,22 +99,46 @@ public class ReflectionCommandInvoker {
     
     // Get parameters of method and check against count of those passed.
     Class[] actionParams = actionMethod.getParameterTypes();
-    if (args.length - 2 < actionParams.length) {
-      System.out.println("Not enough parameters specified for action '" + handlerName + "." + actionMethodName + "()': " + actionParams.length + " are required.");
-      Annotation[][] paramAnnotations = actionMethod.getParameterAnnotations();
-      for (int i = 0; i < actionParams.length; i++) {
-        String paramType = "{" + shortName(actionParams[i]) + "}";
-        String paramName = "unnamed";
-        for (int a = 0; a < paramAnnotations[i].length; a++) {
-          Annotation paramAnnotation = paramAnnotations[i][a];
-          if (paramAnnotation.annotationType() == Param.class) {
-            paramName = Param.class.getMethod("value").invoke(paramAnnotation).toString();
-            break;
+    Annotation[][] paramAnnotations = actionMethod.getParameterAnnotations();
+    List<String> parameterNames = new ArrayList<String>();    
+    int requiredParamCount = 0;
+    
+    for (int i = 0; i < actionParams.length; i++) {
+      for (int a = 0; a < paramAnnotations[i].length; a++) {
+        Annotation paramAnnotation = paramAnnotations[i][a];
+        if (paramAnnotation.annotationType() == Param.class) {
+          String paramName = Param.class.getMethod("value").invoke(paramAnnotation).toString();
+          boolean required = Param.class.getMethod("optional").invoke(paramAnnotation).toString().equals("false");
+          if (required) {
+            requiredParamCount++;
+          } else {
+            paramName += " [optional]";
           }
+          parameterNames.add(paramName);
         }
-        System.out.println("   " + paramName + " " + paramType);
       }
-      System.exit(-1);
+    }
+    
+    // Pack the program arguments into method arguments
+    String[] params = new String[]{};
+    if (args.length > 2) {
+      params = new String[args.length - 2];
+      for (int i = 2; i < args.length; i++) params[i-2] = args[i];
+    }
+    
+    // Check required params and default any optional missing.
+    if (params.length < actionParams.length) {
+      if (params.length < requiredParamCount) {
+        System.out.println("Not enough parameters specified for action '" + handlerName + "." + actionMethodName + "()': " + requiredParamCount + " are required.");
+        for (int i = 0; i < parameterNames.size(); i++) {
+          System.out.println("   " + parameterNames.get(i));
+        }
+        System.exit(-1);
+      }
+      List<String> list = new ArrayList<String>();
+      for (int i = 0; i < params.length; i++) list.add(params[i]);
+      while (list.size() < actionParams.length) list.add(null);
+      params = list.toArray(new String[]{});
     }
     
     // Create the handler object and process command
@@ -123,12 +147,6 @@ public class ReflectionCommandInvoker {
     if (handler == null) {
       System.out.println("Could not construct instance of '" + handlerName + "'.");
       System.exit(-1);
-    }
-    // Pack the program arguments into method arguments
-    String[] params = new String[]{};
-    if (args.length > 2) {
-      params = new String[args.length - 2];
-      for (int i = 2; i < args.length; i++) params[i-2] = args[i];
     }
     // Invoke the command!
     actionMethod.invoke(handler, (Object[])params);

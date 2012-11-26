@@ -14,13 +14,14 @@
  * 
  */
 
-import java.util.HashMap;
-import java.util.Map;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AbstractCommandHandler {
 
@@ -188,5 +189,19 @@ public class AbstractCommandHandler {
     }
     
     return valid.get(upValue);
+  }
+  
+  /**
+   * Return a display string for a database value which might be null.
+   */
+  protected String nullSafe(String possiblyNull) {
+    return possiblyNull == null ? "{null}" : possiblyNull;
+  }
+  
+  /**
+   * Return a display string for a database value which might be null.
+   */
+  protected String nullSafe(Date possiblyNull) {
+    return possiblyNull == null ? "{null}" : possiblyNull.toString();
   }
 }

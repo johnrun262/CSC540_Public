@@ -19,4 +19,5 @@ import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)  @interface Param {
    String value();
+   boolean optional() default false;
 }

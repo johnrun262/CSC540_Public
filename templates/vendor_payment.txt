@@ -1,0 +1,22 @@
+
+Payment:        #{invoiceNumber}
+Date:           {payDate}
+
+FROM:
+
+    Books-A-Thousand
+    1 Infinite Loop
+    Cupertino, CA 95014
+    408.555.5050
+    
+TO:
+
+    {vendorName}
+    {vendorAddress}
+    {vendorPhone}
+
+Purchases
+-----------------------------------------------------------------
+{purchaseList}
+
+TOTAL:      {total}

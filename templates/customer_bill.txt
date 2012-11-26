@@ -4,7 +4,7 @@
     Cupertino, CA 95014
     408.555.5050
     
-Invoice:        #{invoiceNumber}
+Bill:        #{invoiceNumber}
 
 Date:           {billDate}
 Payment is due within 2 weeks.

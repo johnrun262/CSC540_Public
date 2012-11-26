@@ -26,8 +26,9 @@ public class BooksCmd {
 	private static Connection connection = null;
 
 	// Put your oracle ID and password here
-	private static final String user = "jlloyd";
-	private static final String password = "XXXXX";
+	private static final String user = "mgmarum";
+	private static final String password = "sup3rc0w";
+
 
 	private static enum Operations {BILLING, BOOK, CUSTOMER, PURCHASE, REPORT, SALE, STAFF, VENDOR};
 

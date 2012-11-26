@@ -28,9 +28,15 @@
         description="generate the distribution" >
     <!-- Create the distribution directory -->
     <mkdir dir="${dist}/lib"/>
+  	<mkdir dir="${dist}/templates"/>
   	
     <!-- COPY NEW RUNTIME JARS INTO LIB AND ADD THEM TO CLASSPATH ARGUMENT IN books.sh -->
   	<copy file="lib/classes12.zip" tofile="${dist}/lib/classes12.zip"/>
+  	
+     <copy todir="${dist}/templates">
+        <fileset dir="templates">
+        </fileset>
+      </copy>
   	
     <!-- Put everything in ${build} into the a JAR file -->
     <jar jarfile="${dist}/lib/BooksAThousand.jar" basedir="${build}"/>

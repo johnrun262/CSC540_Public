@@ -1,0 +1,27 @@
+
+    Books-A-Thousand
+    1 Infinite Loop
+    Cupertino, CA 95014
+    408.555.5050
+    
+Invoice:        #{invoiceNumber}
+
+Date:           {billDate}
+Payment is due within 2 weeks.
+Pay online or mail payment to Books-A-Thousand at the address above!
+
+Customer Information
+Name:           {customerName}
+Phone:          {customerPhone}
+Address:        {customerAddress}
+
+Items Ordered
+-----------------------------------------------------------------
+{orderList}
+
+
+SUBTOTAL:   {subtotal}
+TAX:        {tax}
+TOTAL:      {total}
+
+Thank you for your business!

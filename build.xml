@@ -43,6 +43,7 @@
   	<copy file="books.sh" tofile="${dist}/books.sh"/>
   	<chmod perm="+x" file="${dist}/books.sh"></chmod>
   	<copy file="books.bat" tofile="${dist}/books.bat"/>
+  	
   </target>
 
   <target name="clean"

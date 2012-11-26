@@ -87,6 +87,7 @@ public class AbstractCommandHandler {
   protected int insertRow(String table, String idColumn, int defaultId, Map<String, Object> params) throws SQLException {
   
     // Set the transaction isolation to prevent row duplicates
+    connection.setAutoCommit(false);
     connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
     
     // Get the last ID assigned and add one to it to create a new ID for this row
@@ -123,6 +124,7 @@ public class AbstractCommandHandler {
     
     // Execute that sucker!
     insertStatement.executeUpdate();
+    connection.commit();
     
     return newID;
   }

@@ -27,7 +27,7 @@ public class BooksCmd {
 
 	// Put your oracle ID and password here
 	private static final String user = "jlloyd";
-	private static final String password = "xxxx";
+	private static final String password = "PASSW0RD";
 
 	private static enum Operations {BILLING, BOOK, CUSTOMER, PURCHASE, REPORT, SALE, STAFF, VENDOR};
 
@@ -76,15 +76,6 @@ public class BooksCmd {
 				Billing billing = new Billing(connection); 
 				if (billing.exec(args) == -1){
 					System.out.println("Invalid Billing request!");
-				}
-
-				break;
-
-			case PURCHASE:
-
-				Purchase pur = new Purchase(connection);
-				if (pur.exec(args) == -1){
-					System.out.println("Invalid Purchase request!");
 				}
 
 				break;

@@ -31,7 +31,8 @@ public class ReflectionCommandInvoker {
     Book.class,
     Customer.class,
     Staff.class,
-    Vendor.class
+    Vendor.class,
+    Purchase.class 
   };
   
   private Connection connection;

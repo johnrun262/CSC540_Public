@@ -15,634 +15,479 @@
  */
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 
 
-public class Purchase {
+public class Purchase extends AbstractCommandHandler {
 
-	private Connection connection = null;
-
-	private static enum PurchaseCmds {ADD, ALL, DELETE, LIST, UPDATE};
-
-	// Constructor
-	Purchase(Connection connection){
-
-		this.connection = connection; 
-
-	}
-
-
-
-	public int exec(String[] args){
-
-		if (args.length < 2){
-			usage();
-			return -1;
-		}
-
-		try {
-			switch (PurchaseCmds.valueOf(args[1].toUpperCase())) {
-			case ADD:
-				// create a new purchase from a vendor
-
-				return(addPurchase(args));
-
-			case ALL:
-				// dump all purchases
-
-				return(allPurchases(args));
-
-			case DELETE:
-				// delete a purchase made from a vendor
-
-				return(deletePurchase(args));
-
-			case LIST:
-				// list purchases made from a vendor
-
-				return(listPurchase(args));
-
-			case UPDATE:
-				// Update a purchase made from a vendor
-
-				return(updatePurchase(args));
-
-			} // switch
-
-		} catch (IllegalArgumentException e) {
-			usage();
-			return -1;
-		}
-
-		return 0;
-
-	}
+	private static String TABLE = "Purchase";
 
 	/*
-	 * Method: addPurchase
-	 * 
-	 * Execute the command to create a book purchase from a vendor. The purchases  
-	 * is inserted with an "ordered" status and todays date
-	 * 
-	 * Input:
-	 * args[0] = "purchase"
-	 * args[1] = "add" 
-	 * args[2] = <bookid>
-	 * args[3] = <vendorid>
-	 * args[4] = <staffid>
-	 * args[5] = <quantity>
-	 * args[6] = <wholesale price>
-	 *
-	 * Returns:
-	 * -1 = purchase not created
+	 * Contruct a handler for staff objects.
 	 */
-	private int addPurchase(String[] args) {
+	public Purchase(Connection connection) { 
+		super(connection);
+	}
 
-		Statement statement = null;
-		int newID = 6001;
 
-		// do we have enough parameters to continue? note that ssn is optional
-		if (args.length < 7) {
-			System.out.println("Command Missing Parameters - usage: Purchase Add <book id> <vendor id> <staff id> <quantity> <wholesale price>");
-			return -1;
-		}
 
-		String bookId = args[2];
-		String vendorId = args[3];
-		String staffId = args[4];
-		String qty = args[5];
-		String price = args[6];
+	/**
+	 * Execute the command to create a purchase record.
+	 * 
+	 * @param bookId
+	 *   The Id of the book record
+	 * @param vendorId
+	 *   The Id of the vendor record
+	 * @param staffId
+	 *   The Id of the staff record
+	 * @param qty
+	 *   The quantity of the purchase
+	 * @param price
+	 *   The wholesale price of the book 
+	 */
+	public void execAdd(		
+			@Param("bookId") String bookId, 
+			@Param("vendorId") String vendorId, 
+			@Param("staffId") String staffId,
+			@Param("quantity") String qty,
+			@Param("price") String price) throws ValidationException, SQLException {
+
+		Double priceValue = null;
+		Integer qtyValue = null;
 
 		// validate input parameters
 		try {
-
-			// check book ID numeric
-			try {
-				Integer.parseInt(bookId);
-			} catch (Exception e) {
-				System.out.println("Book Id must be numeric");
-				return -1;
-			}
-			
+			// check book ID numeric and in database
+			checkBookId(bookId);
 			// check vendor ID numeric
-			try {
-				Integer.parseInt(vendorId);
-			} catch (Exception e) {
-				System.out.println("Vendor Id must be numeric");
-				return -1;
-			}
-			
+			checkVendorId(vendorId);
 			// check staff ID numeric
-			try {
-				Integer.parseInt(staffId);
-			} catch (Exception e) {
-				System.out.println("Staff Id must be numeric");
-				return -1;
-			}
-			
-			// check price numeric and > 0
-			if (Integer.parseInt(price) <= 0) {
-				System.out.println("Wholesale price must be greater than zero");
-				return -1;
-			}
-
+			checkStaffId(staffId);
 			// check quantity numeric and > 0
-			if (Integer.parseInt(qty) <= 0) {
-				System.out.println("Order quantity must be greater than zero");
-				return -1;
-			}
+			qtyValue = checkQty(qty);
+			// check price numeric and >= 0
+			priceValue = checkPrice(price);
 
-		} catch (Exception e) {
-			System.out.println("Invalid Format Parameter");
-			return -1;
+
+		} catch (ValidationException ex) {
+			System.out.println("Validation Error: " + ex.getMessage());
+			return;
 		}
 
-		try {
-			// Book ID must be in book table
-			String sql = "SELECT id FROM Book Where id='"+bookId+"'";
+		// set purchase date to today
+		Date todaysDate = new java.util.Date();
+		SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
+		String date = formatter.format(todaysDate);
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("bookId", bookId);
+		params.put("vendorId", vendorId);
+		params.put("staffId", staffId);
+		params.put("quantity", qtyValue);
+		params.put("wholesalePrice", priceValue);
+		params.put("orderDate", date);
+		params.put("status", "ordered");
 
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
+		int newID = insertRow(TABLE, "id", 1001, params);
 
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(bookId)) {
-					System.out.println("Book Id must be in database: "+ bookId);
-					return -1;
-				}
-			} else {
-				System.out.println("Book Id must be in database: "+ bookId);
-				return -1;
-			}
+		System.out.println("Inserted Purchase record with ID " + newID + " into Database"); 
 
-			// Vendor ID must be in vendor table
-			sql = "SELECT id FROM Vendor Where id='"+vendorId+"'";
+	} // execAdd
 
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			result = statement.executeQuery(sql);
 
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(vendorId)) {
-					System.out.println("Vendor Id must be in database: "+ vendorId);
-					return -1;
-				}
-			} else {
-				System.out.println("Vendor Id must be in database: "+ vendorId);
-				return -1;
-			}
-
-			// Staff ID must be in staff table
-			sql = "SELECT id FROM Staff Where id='"+staffId+"'";
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(staffId)) {
-					System.out.println("Staff Id must be in database: "+ staffId);
-					return -1;
-				}
-			} else {
-				System.out.println("Staff Id must be in database: "+ staffId);
-				return -1;
-			}
-
-			// Get the last ID assigned and add one to it to create a new ID for this vendor
-			// TODO somehow lock others out of insert to prevent duplicate ID
-			sql = "SELECT MAX(id) AS max FROM Purchase";
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				newID = result.getInt("max");
-				newID++;
-			}
-
-			Date todaysDate = new java.util.Date();
-			SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
-			String date = formatter.format(todaysDate);
-
-			// Create and execute the INSERT SQL statement
-			// TODO address can be spread over multiple args - may be working with quotes on cmd line
-			sql = "INSERT INTO Purchase VALUES ("+newID+", '"+date+"','"+bookId+"', '"+vendorId+"', '"+staffId+"','"+qty+"', 'ordered', '"+price+"')";
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			int cnt = statement.executeUpdate(sql);
-
-			// Tell the user the Customer was inserted and the ID
-			System.out.println("Inserted "+ cnt + " Purchase with ID " + newID + " into Database"); 
-
-			return 0;
-
-		} catch (Exception e) {
-			System.out.println("Exception Processing Command: " + e.getMessage());
-			return -1;
-		}
-
-	} // addPurchase
-
-	/*
-	 * Method: allPurchases
-	 * 
-	 * Execute the command to dump Customers
-	 * 
-	 * Input:
-	 * args[0] = "purchase"
-	 * args[1] = "all" 
-	 *
-	 * Returns:
-	 * -1 = error processing request
+	/**
+	 * List all purchases in the system, ordered by the purchase id.
 	 */
-	private int allPurchases(String[] args) {
+	public void execAll() throws SQLException {
 
-		Statement statement = null;
-		int cnt = 0;
+		// Select all rows in the staff table and sort by ID
+		String sql = "SELECT * FROM " + TABLE + " ORDER BY id";
 
-		try {
-			// Select all rows in the Customer table and sort by ID
-			String sql = "SELECT * FROM Purchase ORDER BY id";
+		Statement statement = createStatement();
+		int cnt = displayPurchase(statement.executeQuery(sql));
 
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
+		System.out.println(cnt+" Row(s) Returned");
 
-			// loop through the result set printing attributes
-			while (result.next()) {
-				cnt++;
-				int purId = result.getInt("id");
-				Date date = result.getDate("orderDate");
-				int bookId = result.getInt("bookId");
-				int vendorId = result.getInt("vendorId");
-				int staffId = result.getInt("staffId");
-				int qty = result.getInt("quantity");
-				String status = result.getString("status");
-				int price = result.getInt("wholesalePrice");
+	} // execAll
 
-				System.out.println(cnt+"\tID: "+purId+"\tDate: "+date+"\tBook ID: "+bookId+"\tVendor ID: "+vendorId+"\tStaff ID: "+staffId+"\tQty: "+qty+"\tStatus: "+status+"\tWholesale Price: "+price);
-			}
-
-			System.out.println(cnt+" Row(s) Returned");
-
-			return 0;
-
-		} catch (Exception e) {
-			System.out.println("Exception Processing Command: " + e.getMessage());
-			return -1;
-		}	
-
-	} // allPurchases
-
-
-	/*
-	 * Method: deletePurchase
-	 * 
-	 * Execute the command to delete a Purchase by ID
-	 * 
-	 * Input:
-	 * args[0] = "purchase"
-	 * args[1] = "delete" 
-	 * args[2] = <id>
+	/**
+	 * Delete the specified purchase record
 	 *
-	 * Returns:
-	 * -1 = purchase not deleted
+	 * @param id
+	 *   The purchase id. Must be convertable to an integer.
 	 */
-	private int deletePurchase(String[] args) {
+	public void execDelete(@Param("staff id") String id) throws SQLException {
 
-		Statement statement = null;
-
-		// do we have enough parameters to continue?
-		if (args.length < 3) {
-			System.out.println("Command Missing Parameters - usage: Purchase Delete <id>");
-			return -1;
-		}
-
-		String purchaseId = args[2];
-		
-		// check purchase ID numeric
 		try {
-			Integer.parseInt(purchaseId);
-		} catch (Exception e) {
-			System.out.println("Purchase Id must be numeric");
-			return -1;
+			checkPurId(id);
+		} catch (ValidationException e) {
+			System.out.println("Validation Error: " + e.getMessage());
+			return;
 		}
 		
-		try { 
+		int count = deleteRow(TABLE, Integer.parseInt(id));
 
-			// Create and execute the DELETE SQL statement
-			// TODO validate id numeric
-			String sql = "DELETE FROM Purchase WHERE id="+purchaseId;
+		System.out.println("Deleted "+ count + " Staff with ID " + id + " from Database"); 
 
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			int cnt = statement.executeUpdate(sql);
+	} // exec delete
 
-			// Tell the user the Vendor was inserted and the ID
-			System.out.println("Deleted "+ cnt + " Purchase(s) with ID " + purchaseId + " from Database"); 
-
-			return 0;
-
-		} catch (Exception e) {
-			System.out.println("Exception Processing Command: " + e.getMessage());
-			return -1;
-		}
-
-	} // deletePurchase
-
-	/*
-	 * Method: listPurchase
-	 * 
-	 * Execute the command to list info about a Purchase given ID
-	 * 
-	 * Input:
-	 * args[0] = "purchase"
-	 * args[1] = "list"
-	 * args[2] = <id> 
+	/**
+	 * Display the properties of a specific purchase record.
 	 *
-	 * Returns:
-	 * -1 = error retrieving customer
+	 * @param id
+	 *   The purchase id. Must be convertable to an integer.
 	 */
-	private int listPurchase(String[] args) {
+	public void execList(@Param("staff id") String id) throws SQLException {
 
-		Statement statement = null;
-		int cnt = 0;
-
-		// do we have enough parameters to continue?
-		if (args.length < 3) {
-			System.out.println("Command Missing Parameters - usage: Purchase List <id>");
-			return -1;
-		}
-
-		String purchaseId = args[2];
-		
-		// check purchase ID numeric
 		try {
-			Integer.parseInt(purchaseId);
-		} catch (Exception e) {
-			System.out.println("Purchase Id must be numeric");
-			return -1;
+			checkPurId(id);
+		} catch (ValidationException e) {
+			System.out.println("Validation Error: " + e.getMessage());
+			return; 
 		}
 		
-		try {
-			// Select row in the purchase table with ID
-			// TODO is ID numeric?
-			String sql = "SELECT * FROM Purchase WHERE id = "+ purchaseId;
+		// Select row in the Staff table with ID
+		String sql = "SELECT * FROM " + TABLE + " WHERE id = "+ Integer.parseInt(id);
 
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
+		Statement statement = createStatement();
+		int cnt = displayPurchase(statement.executeQuery(sql));
 
-			// loop through the result set printing attributes
-			// loop through the result set printing attributes
-			while (result.next()) {
-				cnt++;
-				int purId = result.getInt("id");
-				Date date = result.getDate("orderDate");
-				int bookId = result.getInt("bookId");
-				int vendorId = result.getInt("vendorId");
-				int staffId = result.getInt("staffId");
-				int qty = result.getInt("quantity");
-				String status = result.getString("status");
-				int price = result.getInt("wholesalePrice");
+		System.out.println(cnt+" Row(s) Returned");
 
-				System.out.println(cnt+"\tID: "+purId+"\tDate: "+date+"\tBook ID: "+bookId+"\tVendor ID: "+vendorId+"\tStaff ID: "+staffId+"\tQty: "+qty+"\tStatus: "+status+"\tWholesale Price: "+price);
-			}
-			
-			System.out.println(cnt+" Row(s) Returned");
+	}
 
-			return 0;
-
-		} catch (Exception e) {
-			System.out.println("Exception Processing Command: " + e.getMessage());
-			return -1;
-		}	
-
-	} // listPurchase
-
-	/*
-	 * Method: updatePurchase
+	/**
+	 * Execute the command to update a purchase record.
 	 * 
-	 * Execute the command to update purchase with ID with the given values
-	 * 
-	 * Input:
-	 * args[0] = "vendor"
-	 * args[1] = "update"
-	 * args[2] = <id> 
-	 * args[3] = <bookid>
-	 * args[4] = <vendorid>
-	 * args[5] = <staffid>
-	 * args[6] = <quantity>
-	 * args[7] = <wholesale price>
-	 * args[8] = <order date>
-	 * args[9] = <status>
-	 *
-	 * Returns:
-	 * -1 = purchase not updated
+	 * @param id
+	 *   The id of the purchase record we are updating
+	 * @param bookId
+	 *   The Id of the book record
+	 * @param vendorId
+	 *   The Id of the vendor record
+	 * @param staffId
+	 *   The Id of the staff record
+	 * @param qty
+	 *   The quantity of the purchase
+	 * @param price
+	 *   The wholesale price of the book 
+	 * @param orderDate
+	 *   The date the order was placed
+	 * @param status
+	 *   The status of the order (ordered, received, shipped)
 	 */
-	private int updatePurchase(String[] args) {
+	// TODO this needs testing!
+	public void execUpdate(	
+			@Param("id") String purId,
+			@Param("bookId") String bookId, 
+			@Param("vendorId") String vendorId, 
+			@Param("staffId") String staffId,
+			@Param("quantity") String qty,
+			@Param("price") String price,
+			@Param("orderDate") String orderDate,
+			@Param("status") String status) throws ValidationException, SQLException {
 
-		Statement statement = null;
-		
-		// do we have enough parameters to continue? note that ssn is optional
-		if (args.length < 10) {
-			System.out.println("Command Missing Parameters - usage: Purchase Update <purchase id> <book id> <vendor id> <staff id> <quantity> <wholesale price> <order date> <status>");
-			return -1;
-		}
-
-		String purId = args[2];
-		String bookId = args[3];
-		String vendorId = args[4];
-		String staffId = args[5];
-		String qty = args[6];
-		String price = args[7];
-		String date = args[8];
-		String status = args[9];
+		Double priceValue = null;
+		Integer qtyValue = null;
 
 		// validate input parameters
 		try {
-			
-			// check purchase ID numeric
-			try {
-				Integer.parseInt(purId);
-			} catch (Exception e) {
-				System.out.println("Purchase Id must be numeric");
-				return -1;
-			}
-			
-			// check book ID numeric
-			try {
-				Integer.parseInt(bookId);
-			} catch (Exception e) {
-				System.out.println("Book Id must be numeric");
-				return -1;
-			}
-			
+			// check the purchase record id is numeric and in database
+			checkPurId(purId);
+			// check book ID numeric and in database
+			checkBookId(bookId);
 			// check vendor ID numeric
-			try {
-				Integer.parseInt(vendorId);
-			} catch (Exception e) {
-				System.out.println("Vendor Id must be numeric");
-				return -1;
-			}
-			
+			checkVendorId(vendorId);
 			// check staff ID numeric
-			try {
-				Integer.parseInt(staffId);
-			} catch (Exception e) {
-				System.out.println("Staff Id must be numeric");
-				return -1;
-			}
-			
-			// validate order date
-			try {
-				SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
-				format.parse(date);
-				// TODO check year is say >1900
-			} catch (Exception e) {
-				System.out.println("Invalid Format Order Date: expecting dd-MMM-yyyy (ex 12-dec-1960) found "+date);
-				return -1;
-			}
-			
-			// check price numeric and > 0
-			if (Integer.parseInt(price) <= 0) {
-				System.out.println("Wholesale price must be greater than zero");
-				return -1;
-			}
-
+			checkStaffId(staffId);
 			// check quantity numeric and > 0
-			if (Integer.parseInt(qty) <= 0) {
-				System.out.println("Order quantity must be greater than zero");
-				return -1;
-			}
+			qtyValue = checkQty(qty);
+			// check price numeric and >= 0
+			priceValue = checkPrice(price);
+			// check status ordered, shipped, received
+			checkStatus(status);
+			// check valid format date
+			// TODO uses date of birth routine but not DoB
+			ValidationHelpers.checkDateOfBirth(orderDate);
 
-			// Status must be ordered, received or shipped
-			if ((status = checkStatus(status)) == null) {
-				return -1;
-			}
-			
-		} catch (Exception e) {
-			System.out.println("Invalid Format Parameter");
-			return -1;
+
+		} catch (ValidationException ex) {
+			System.out.println("Validation Error: " + ex.getMessage());
+			return;
 		}
 
-		try {
-			// Book ID must be in book table
-			String sql = "SELECT id FROM Book Where id='"+bookId+"'";
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("id", purId);
+		params.put("bookId", bookId);
+		params.put("vendorId", vendorId);
+		params.put("staffId", staffId);
+		params.put("quantity", qtyValue);
+		params.put("wholesalePrice", priceValue);
+		params.put("orderDate", orderDate);
+		params.put("status", status);
 
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
 
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(bookId)) {
-					System.out.println("Book Id must be in database: "+ bookId);
-					return -1;
-				}
-			} else {
-				System.out.println("Book Id must be in database: "+ bookId);
-				return -1;
-			}
+	    updateRow(TABLE, "id", Integer.parseInt(purId), params);
 
-			// Vendor ID must be in vendor table
-			sql = "SELECT id FROM Vendor Where id='"+vendorId+"'";
+		System.out.println("Update Purchase record with ID " + purId); 
 
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			result = statement.executeQuery(sql);
+	} // execUpdate
 
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(vendorId)) {
-					System.out.println("Vendor Id must be in database: "+ vendorId);
-					return -1;
-				}
-			} else {
-				System.out.println("Vendor Id must be in database: "+ vendorId);
-				return -1;
-			}
-
-			// Staff ID must be in staff table
-			sql = "SELECT id FROM Staff Where id='"+staffId+"'";
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(staffId)) {
-					System.out.println("Staff Id must be in database: "+ staffId);
-					return -1;
-				}
-			} else {
-				System.out.println("Staff Id must be in database: "+ staffId);
-				return -1;
-			}
-
-			// Create and execute the UPDATE SQL statement
-			// TODO don't require update of all attributes
-			sql = "UPDATE Purchase SET id='" +purId+"', orderDate='"+date+"', bookId='"+bookId+"', vendorId='"+vendorId+"', staffId='"+staffId+"', quantity='"+qty+"', status='"+status+"', wholesalePrice='"+price+"' "+
-					"WHERE id="+args[2];
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			int cnt = statement.executeUpdate(sql);
-
-			// Tell the user the Purchase was updated and the ID
-			System.out.println("Updated "+ cnt + " Purchase(s) with ID " + args[2] + " in Database"); 
-
-			return 0;
-
-		} catch (Exception e) {
-			System.out.println("Exception Processing Command: " + e.getMessage());
-			return -1;
-		}
-
-	} // updatePurchase
-
-	private static void usage() {
-		System.out.println("Subcommand Required. Legal values:");
-		for (PurchaseCmds t : PurchaseCmds.values()) {
-			System.out.println(t.toString());
-		}
-	}
-	
 	// check the status passed from user is valid
-	private String checkStatus(String status) {
+	private String checkStatus(String status) throws ValidationException {
 
+		Map<String, String> valid = new TreeMap<String, String>();
+		valid.put("O", "ordered");
+		valid.put("R", "received");
+		valid.put("S", "shipped");
+
+		return validateCode(status, "Status", valid);
+
+	} // checkStatus
+
+	/**
+	 * Check the Quantity. Throw a ValidationException if there is an error.
+	 *
+	 * Must be a parseable integer greater than zero.
+	 *
+	 * @param quantity
+	 *   The quantity of books purchased.
+	 */
+	private int checkQty(String qty) throws ValidationException {
 		try {
-			if (status.toUpperCase().startsWith("O")) {
-				return "ordered";
+			int qtyValue = Integer.parseInt(qty);
+			if (qtyValue <= 0) {
+				throw new ValidationException("Quantity must be greater than zero");
 			}
-
-			if (status.toUpperCase().startsWith("R")) {
-				return "received";
-			}
-
-			if (status.toUpperCase().startsWith("S")) {
-				return "shipped";
-			}
-					
+			return qtyValue;
 		} catch (Exception e) {
+			throw new ValidationException("Quantity must be a number");
+		}
+	} // checkQty
+
+	/**
+	 * Check the Price. Throw a ValidationException if there is an error.
+	 *
+	 * Must be a parseable double greater than equal to zero.
+	 *
+	 * @param quantity
+	 *   The quantity of books purchased.
+	 */
+	private double checkPrice(String price) throws ValidationException {
+		try {
+			double priceValue = Double.parseDouble(price);
+			if (priceValue <= 0) {
+				throw new ValidationException("Price must be greater than or equal zero");
+			}
+			return priceValue;
+		} catch (Exception e) {
+			throw new ValidationException("Price must be a number");
+		} 
+	} // checkPrice
+
+	/**
+	 * Check the Purchase Id. Throw a ValidationException if there is an error.
+	 *
+	 * Must be a parseable integer greater than equal to zero and
+	 * exist in the books table.
+	 *
+	 * @param id
+	 *   The id of the purchase record
+	 */
+	private void checkPurId(String purId) throws ValidationException {
+		try {
+			int idValue = Integer.parseInt(purId);
+			if (idValue <= 0) {
+				throw new ValidationException("Purchase Id must be a positive integer: "+purId);
+			}
+		} catch (Exception e) {
+			throw new ValidationException("Purchase Id must be a number: "+purId); 
+		}
+		try {
+			// Book ID must be in book table
+			String sql = "SELECT id FROM Purchase Where id='"+purId+"'";
+
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			ResultSet result = statement.executeQuery(sql);
+
+			if (result.next()) {
+				int id = result.getInt("id");
+				if (id != Integer.parseInt(purId)) {
+					throw new ValidationException("Purchase Id must be in database: "+ purId);
+				}
+			} else {
+				throw new ValidationException("Purchase Id must be in database: "+ purId);
+			}
+
+			return;
+
+		} catch (Exception e) {
+			throw new ValidationException("Exception Validating Purchase Id: " + e.getMessage());
 		}
 
-		System.out.println("Invalid Status - Valid values are: (O)rdered, (R)eceived, (S)hipped");
-
-		return null;
-				
-	} // checkStatus
+	} // checkPurId
 	
+	/**
+	 * Check the BookId. Throw a ValidationException if there is an error.
+	 *
+	 * Must be a parseable integer greater than equal to zero and
+	 * exist in the books table.
+	 *
+	 * @param bookId
+	 *   The id of the record for the book purchased from vendor
+	 */
+	private void checkBookId(String bookId) throws ValidationException {
+		try {
+			int bookIdValue = Integer.parseInt(bookId);
+			if (bookIdValue <= 0) {
+				throw new ValidationException("Book Id must be a positive integer: "+bookId);
+			}
+		} catch (Exception e) {
+			throw new ValidationException("Book Id must be a number: "+bookId); 
+		}
+		try {
+			// Book ID must be in book table
+			String sql = "SELECT id FROM Book Where id='"+bookId+"'";
+
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			ResultSet result = statement.executeQuery(sql);
+
+			if (result.next()) {
+				int id = result.getInt("id");
+				if (id != Integer.parseInt(bookId)) {
+					throw new ValidationException("Book Id must be in database: "+ bookId);
+				}
+			} else {
+				throw new ValidationException("Book Id must be in database: "+ bookId);
+			}
+
+			return;
+
+		} catch (Exception e) {
+			throw new ValidationException("Exception Validating Book Id: " + e.getMessage());
+		}
+
+	} // checkBookId
+
+	/**
+	 * Check the VendorId. Throw a ValidationException if there is an error.
+	 *
+	 * Must be a parseable integer greater than equal to zero and
+	 * exist in the books table.
+	 *
+	 * @param vendorId
+	 *   The id of the record for the vendor from which a book purchased
+	 */
+	private void checkVendorId(String vendorId) throws ValidationException {
+		try {
+			int vendorIdValue = Integer.parseInt(vendorId);
+			if (vendorIdValue <= 0) {
+				throw new ValidationException("Vendor Id must be a positive integer: "+vendorId);
+			}
+		} catch (Exception e) {
+			throw new ValidationException("Vendor Id must be a number: "+vendorId);
+		}
+		try {
+			// Book ID must be in book table
+			String sql = "SELECT id FROM Vendor Where id='"+vendorId+"'";
+
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			ResultSet result = statement.executeQuery(sql);
+
+			if (result.next()) {
+				int id = result.getInt("id");
+				if (id != Integer.parseInt(vendorId)) {
+					throw new ValidationException("Vendor Id must be in database: "+ vendorId);
+				}
+			} else {
+				throw new ValidationException("Vendor Id must be in database: "+ vendorId);
+			}
+
+			return;
+
+		} catch (Exception e) {
+			throw new ValidationException("Exception Validating Vendor Id: " + e.getMessage());
+		}
+
+	} // checkVendorId
+
+	/**
+	 * Check the StaffId. Throw a ValidationException if there is an error.
+	 *
+	 * Must be a parseable integer greater than equal to zero and
+	 * exist in the books table.
+	 *
+	 * @param staffId
+	 *   The id of the record for the staff member that purchased the book from the vendor
+	 */
+	private void checkStaffId(String staffId) throws ValidationException {
+		try {
+			int vendorIdValue = Integer.parseInt(staffId);
+			if (vendorIdValue <= 0) {
+				throw new ValidationException("Staff Id must be a positive integer: "+staffId);
+			}
+		} catch (Exception e) {
+			throw new ValidationException("Staff Id must be a number: "+staffId);
+		}
+		try {
+			// Book ID must be in book table
+			String sql = "SELECT id FROM Staff Where id='"+staffId+"'";
+
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			ResultSet result = statement.executeQuery(sql);
+
+			if (result.next()) {
+				int id = result.getInt("id");
+				if (id != Integer.parseInt(staffId)) {
+					throw new ValidationException("Staff Id must be in database: "+ staffId);
+				}
+			} else {
+				throw new ValidationException("Staff Id must be in database: "+ staffId);
+			}
+
+			return;
+
+		} catch (Exception e) {
+			throw new ValidationException("Exception Validating Vendor Id: " + e.getMessage());
+		}
+
+	} // checkStaffId
+
+	/**
+	 * Display the purchase record from the result set and return the total count.
+	 */
+	private int displayPurchase(ResultSet result) throws SQLException {
+
+		int cnt = 0;
+		// loop through the result set printing attributes
+		while (result.next()) {
+			cnt++;
+			int purId = result.getInt("id");
+			Date date = result.getDate("orderDate");
+			int bookId = result.getInt("bookId");
+			int vendorId = result.getInt("vendorId");
+			int staffId = result.getInt("staffId");
+			int qty = result.getInt("quantity");
+			String status = result.getString("status");
+			int price = result.getInt("wholesalePrice");
+
+			System.out.println(cnt+"\tID: "+purId+"\tDate: "+date+"\tBook ID: "+bookId+"\tVendor ID: "+vendorId+"\tStaff ID: "+staffId+"\tQty: "+qty+"\tStatus: "+status+"\tWholesale Price: "+price);
+		}
+
+		return cnt;
+
+	}
+
 }

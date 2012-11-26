@@ -36,6 +36,11 @@ public class AbstractCommandHandler {
     this.connection = connection;
   }
   
+  protected void exitProgram(String error) {
+    System.out.println(error);
+    System.exit(-1);
+  }
+  
   /**
    * Create a statement and set the default timeout.
    */
@@ -163,6 +168,14 @@ public class AbstractCommandHandler {
     
     // Execute that sucker!
     return updateStatement.executeUpdate();  
+  }
+  
+  protected int getRowCount(String table, String whereClause) throws SQLException {
+    Statement statement = createStatement();
+    String sql = "SELECT COUNT(*) AS count FROM " + table + " WHERE " + whereClause;
+    ResultSet result = statement.executeQuery(sql);
+    result.next();
+    return result.getInt("count");
   }
   
   /**

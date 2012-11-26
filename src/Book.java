@@ -14,17 +14,18 @@
  * 
  */
 
-import java.util.HashMap;
-import java.util.Map;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class Book extends AbstractCommandHandler {
 
-  private static String TABLE = "Book";
+  public static String TABLE = "Book";
   
 	/*
    * Contruct a handler for book objects.

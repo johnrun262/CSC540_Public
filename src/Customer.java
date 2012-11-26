@@ -29,7 +29,7 @@ import java.util.TreeMap;
 
 public class Customer extends AbstractCommandHandler {
 
-  private static String TABLE = "Customer";
+  public static String TABLE = "Customer";
 
   /*
    * Contruct a handler for Customer objects.

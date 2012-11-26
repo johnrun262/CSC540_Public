@@ -29,7 +29,7 @@ import java.util.TreeMap;
 
 public class Staff extends AbstractCommandHandler {
 
-  private static String TABLE = "Staff";
+  public static String TABLE = "Staff";
   
   /*
    * Contruct a handler for staff objects.

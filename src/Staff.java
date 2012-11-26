@@ -338,7 +338,19 @@ public class Staff extends AbstractCommandHandler {
       String phone = result.getString("phone");
       String address = result.getString("address");
       String workLoc = result.getString("workLocation");
-      System.out.println(cnt+"\tID: "+id+"\tName: "+name+"\tPhone: "+phone+"\tAddress: "+address+"\tDOB: "+dob+"\tGender: "+gender+"\tTitle: "+jobTitle+"\tDept: "+dept+"\tLocation: "+workLoc+"\tSalary: "+salary);
+      System.out.println(
+        cnt+
+        "\tID: "+id+
+        "\tName: "+name+
+        "\tPhone: "+phone+
+        "\tAddress: "+address+
+        "\tDOB: "+dob+
+        "\tGender: "+gender+
+        "\tTitle: "+jobTitle+
+        "\tDept: "+dept+
+        "\tLocation: "+workLoc+
+        "\tSalary: "+salary
+      );
     }
     return cnt;
     

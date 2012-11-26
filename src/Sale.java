@@ -20,8 +20,11 @@ import java.sql.Statement;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 
 
@@ -191,7 +194,11 @@ public class Sale extends AbstractCommandHandler {
       if (getRowCount(Book.TABLE, "id=" + bookId) == 0) exitProgram("Could not find book " + bookId + ".");
       
       // If the order was shipped, we can't append to it.
-      exitIfShipped(orderId);
+      String orderStatus = getOrderStatus(orderId);
+      if (orderStatus.equals(STATUS_SHIPPED)) {
+        // Sorry, you can't append to an order that already shipped to the customer.
+        exitProgram("Order " + orderId + " cannot be appended to. It has already been shipped!");
+      }
     
       // TODO: What do we do if there is insufficient quantity of this book in stock? Create a purchase order? Or?
       
@@ -219,12 +226,95 @@ public class Sale extends AbstractCommandHandler {
   }
   
   /**
+   * Mark an order as shipped.
+   *
+   * 1) Ensure the order is in the correct status.
+   * 2) Ensure there is sufficient books in stock to fulfill the order
+   * 3) Decrease stock by quantity on order
+   * 4) Mark order as shipped
+   *
+   * @param order
+   *   The order id that will be shipped.
+   */
+  public void execShip (
+    @Param("order id") String order) throws SQLException {
+    
+    int orderId = Integer.parseInt(order);
+    
+    try {
+      // Require consistency across multiple queries via serialized transaction isolation
+      connection.setAutoCommit(false);
+      connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+      
+      // Step 1: Only allow to ship unshipped orders.
+      String orderStatus = getOrderStatus(orderId);
+      if (orderStatus.equals(STATUS_SHIPPED)) {
+        // Sorry, you can't ship an order that already shipped to the customer.
+        exitProgram("Order " + orderId + " could not be marked as shipped. It has already been shipped!");
+      }
+      
+      // Step 2: Check book stock
+      // Query the order item rows with a join on book table and a sum of the order and stock quantity.
+      // If the sum is < 0, it means there is insufficient stock for that particular book.
+      // Since different order item rows may contain the same book, the order quantity is the sum on an
+      // inner query grouped by the book.
+      String innerSql = "SELECT bookId, SUM(quantity) AS quantity " +
+        " FROM " + TABLE_ORDER_ITEM +
+        " WHERE orderId=" + orderId +
+        " GROUP BY bookId ";
+      String sql = "SELECT bookId, b.title AS bookTitle, b.stockQuantity, quantity AS orderQty, stockQuantity-quantity AS stockRemaining " + 
+        " FROM (" + innerSql + ") oi " +
+        " INNER JOIN " + Book.TABLE + " b " +
+        " ON oi.bookId=b.id ";
+      Statement statement = createStatement();
+      ResultSet result = statement.executeQuery(sql);
+      List<String> badBooks = new ArrayList<String>();
+      Map<String, Integer> newQuantities = new TreeMap<String, Integer>();
+      while (result.next()) {
+        int stockRemaining = result.getInt("stockRemaining");
+        if (stockRemaining < 0) {
+          badBooks.add("\"" + result.getString("bookTitle") + "\": " + result.getInt("orderQty") + " needed, " + result.getInt("stockQuantity") + " on hand");
+        }
+        newQuantities.put(result.getString("bookId"), stockRemaining);
+      }
+      if (badBooks.size() > 0) {
+        System.out.println("Cannot ship the order. There is insufficient stock in quantity for the following book(s):");
+        for (String book : badBooks) System.out.println("\t" + book);
+        System.exit(-1);
+      }
+      
+      // Step 3: Decrease stock quantity of books on order
+      for(Map.Entry<String, Integer> quantityUpdate : newQuantities.entrySet()) {
+        sql = "UPDATE " + Book.TABLE + " SET stockQuantity = " + quantityUpdate.getValue() + " WHERE id=" + quantityUpdate.getKey();
+        statement.executeQuery(sql);
+      }
+      
+      // Step 4: Mark order shipped
+      sql = "UPDATE " + TABLE_ORDER + " SET status=? WHERE id=?";
+      PreparedStatement updateStatement = connection.prepareStatement(sql);
+      updateStatement.setString(1, STATUS_SHIPPED);
+      updateStatement.setInt(2, orderId);
+      updateStatement.executeUpdate();
+      
+      // Commit the transaction
+      connection.commit();
+      
+      System.out.println("Order ID " + orderId + " has been marked as shipped"); 
+      
+    } catch (SQLException e ) {
+      // Rollback if any unanticipated SQL errors occur.
+      connection.rollback();
+      throw e;
+    }    
+  }
+
+  /**
    * Check if the order has been shipped and exit the program if it has.
    *
    * @param orderId
    *   The order id to check.
    */
-  private void exitIfShipped(int orderId) throws SQLException {
+  private String getOrderStatus(int orderId) throws SQLException {
     String sql = "SELECT status FROM " + TABLE_ORDER + " WHERE id=" + orderId;
     Statement statement = createStatement();
     ResultSet result = statement.executeQuery(sql);
@@ -232,11 +322,7 @@ public class Sale extends AbstractCommandHandler {
       // Whoops, order was not found!
       exitProgram("Could not find order " + orderId + ".");
     }
-    String orderStatus = result.getString("status").trim();
-    if (orderStatus.equals(STATUS_SHIPPED)) {
-      // Sorry, you can't delete an order that already shipped to the customer.
-      exitProgram("Order " + orderId + " could not be deleted. It has already been shipped!");
-    }
+    return result.getString("status").trim();
   }
   
   /**
@@ -253,7 +339,12 @@ public class Sale extends AbstractCommandHandler {
     
     int orderId = Integer.parseInt(id);
     // Check the order and determine if it has been shipped. Disallow if true
-    exitIfShipped(orderId);
+    String orderStatus = getOrderStatus(orderId);
+    if (orderStatus.equals(STATUS_SHIPPED)) {
+      // Sorry, you can't delete an order that already shipped to the customer.
+      exitProgram("Order " + orderId + " could not be deleted. It has already been shipped!");
+    }
+
     
     // TODO: Do we need to increase the stock quantity of books in this order, or are they only reduced when shipped?
     

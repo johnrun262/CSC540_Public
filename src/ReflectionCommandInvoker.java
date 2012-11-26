@@ -30,6 +30,7 @@ public class ReflectionCommandInvoker {
   private static Class[] operationClasses = new Class[] {
     Book.class,
     Customer.class,
+    Sale.class,
     Staff.class,
     Vendor.class
   };

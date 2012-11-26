@@ -153,7 +153,14 @@ public class Book extends AbstractCommandHandler {
       String author = result.getString("author");
       Double retailPrice = result.getDouble("retailPrice");
       int stockQuantity = result.getInt("stockQuantity");
-      System.out.println(cnt+"\tID: "+id+"\tTitle: "+title+"\tAuthor: "+author+"\tPrice: $"+retailPrice+"\tQty: "+stockQuantity);
+      System.out.println(
+        cnt+
+        "\tID: "+id+
+        "\tTitle: "+title+
+        "\tAuthor: "+author+
+        "\tPrice: $"+new DecimalFormat("0.00").format(retailPrice)+
+        "\tQty: "+stockQuantity
+      );
     }
     return cnt;
     

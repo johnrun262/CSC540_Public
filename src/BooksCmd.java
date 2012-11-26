@@ -27,7 +27,7 @@ public class BooksCmd {
 
 	// Put your oracle ID and password here
 	private static final String user = "mgmarum";
-	private static final String password = "sup3rc0w";
+	private static final String password = "xxxxx";
 
 
 	private static enum Operations {BILLING, BOOK, CUSTOMER, PURCHASE, REPORT, SALE, STAFF, VENDOR};

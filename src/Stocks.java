@@ -54,7 +54,8 @@ public class Stocks extends AbstractCommandHandler {
 			checkBookId(bookId);
 			// check vendor ID numeric
 			checkVendorId(vendorId);
-			// check staff ID numeric
+			// check bookId, vendor Id pair not already in stocks
+			checkUnique(bookId, vendorId);
 
 		} catch (ValidationException ex) {
 			System.out.println("Validation Error: " + ex.getMessage());
@@ -63,7 +64,6 @@ public class Stocks extends AbstractCommandHandler {
 
 
 		try {
-			// TODO should not allow duplicate records
 			// Prepare the insert statement
 			String sql = "INSERT INTO " + TABLE + " VALUES (" + bookId + ", " + vendorId + ")";
 			PreparedStatement insertStatement = prepareStatement(sql);
@@ -85,10 +85,10 @@ public class Stocks extends AbstractCommandHandler {
 	public void execAll() throws SQLException {
 
 		// Select all rows in the staff table and sort by ID
-		String sql = "SELECT * FROM " + TABLE + " ORDER BY bookId";
+		String sql = "SELECT * FROM Vendor, " + TABLE + " Where vendor.id = stocks.vendorid ORDER BY bookId";
 
 		Statement statement = createStatement();
-		int cnt = displayPurchase(statement.executeQuery(sql));
+		int cnt = displayStocks(statement.executeQuery(sql));
 
 		System.out.println(cnt+" Row(s) Returned");
 
@@ -100,26 +100,38 @@ public class Stocks extends AbstractCommandHandler {
 	 * @param id
 	 *   The book id. Must be convertable to an integer.
 	 */
-	public void execDelete(@Param("Book id") String id) throws SQLException {
+	public void execDelete(@Param("Book id") String bookId, @Param("Vendor id") String vendorId) throws SQLException {
 
+		// validate the input parameters
 		try {
-			checkBookId(id);
+			checkBookId(bookId);
+			checkVendorId(vendorId);
 		} catch (ValidationException e) {
 			System.out.println("Validation Error: " + e.getMessage());
 			return;
 		}
 
-		int count = deleteRow(TABLE, Integer.parseInt(id));
+		try {
+			// Prepare the delete statement
+			String sql = "DELETE FROM " + TABLE + " Where bookId='"+bookId+"' AND vendorId='"+vendorId+"'";
+			PreparedStatement deleteStatement = prepareStatement(sql);
 
-		System.out.println("Deleted "+ count + " Stocks record with ID " + id + " from Database"); 
+			// Execute that sucker!
+			int cnt = deleteStatement.executeUpdate();
+			
+			System.out.println("Deleted "+ cnt + " Stocks record(s) with Book ID " + bookId + " and Vendor ID " + vendorId + " from Database"); 
+
+		} catch (Exception e) {
+			System.out.println("Exception Inserting Stocks Record: " + e.getMessage());
+		}
 
 	} // exec delete
 
 	/**
-	 * Display the properties of a specific purchase record.
+	 * Display all vendors supplying a book ID
 	 *
-	 * @param id
-	 *   The purchase id. Must be convertable to an integer.
+	 * @param bookid
+	 *   The book id. Must be convertable to an integer.
 	 */
 	public void execList(@Param("book id") String id) throws SQLException {
 
@@ -130,11 +142,11 @@ public class Stocks extends AbstractCommandHandler {
 			return; 
 		}
 
-		// Select row in the Staff table with ID
-		String sql = "SELECT * FROM " + TABLE + " WHERE id = "+ Integer.parseInt(id);
+		// Select rows in the Stocks table with Book ID
+		String sql = "SELECT * FROM Vendor, " + TABLE + " WHERE vendor.id = stocks.vendorid AND stocks.bookid = "+ Integer.parseInt(id);
 
 		Statement statement = createStatement();
-		int cnt = displayPurchase(statement.executeQuery(sql));
+		int cnt = displayStocks(statement.executeQuery(sql));
 
 		System.out.println(cnt+" Row(s) Returned");
 
@@ -238,9 +250,39 @@ public class Stocks extends AbstractCommandHandler {
 	} // checkVendorId
 
 	/**
+	 * Check the BookId, VendorId pair is unique in the stocks table
+	 * 
+	 * @param bookId
+	 *   The id of the record for the book
+	 * @param vendorId
+	 *   The id of the record for the vendor from which a book purchased
+	 */
+	private void checkUnique(String bookId, String vendorId) throws ValidationException {
+
+		try {
+			// Book ID, Vendor ID pair must not be in stocks table
+			String sql = "SELECT bookId, vendorId FROM Stocks Where bookId='"+bookId+"' AND vendorId='"+vendorId+"'";
+
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			ResultSet result = statement.executeQuery(sql);
+
+			if (result.next()) {
+				throw new ValidationException("BookId, VendorId pair must not be in the stocks table: "+ bookId+"/"+vendorId);
+			}
+
+			return;
+
+		} catch (Exception e) {
+			throw new ValidationException("Exception Validating Book Id/Vendor Id: " + e.getMessage());
+		}
+
+	} // checkUnique
+
+	/**
 	 * Display the stocks record from the result set and return the total count.
 	 */
-	private int displayPurchase(ResultSet result) throws SQLException {
+	private int displayStocks(ResultSet result) throws SQLException {
 
 		int cnt = 0;
 		// loop through the result set printing attributes
@@ -248,8 +290,10 @@ public class Stocks extends AbstractCommandHandler {
 			cnt++;
 			int bookId = result.getInt("bookId");
 			int vendorId = result.getInt("vendorId");
+			String vendorName = result.getString("name");
+			String vendorPhone = result.getString("phone");
 
-			System.out.println(cnt+"\tBook ID: "+bookId+"\tVendor ID: "+vendorId);
+			System.out.println(cnt+"\tBook ID: "+bookId+"\tVendor ID: "+vendorId+"\tVendor Name: "+vendorName+"\tVendor Phone: "+vendorPhone);
 		}
 
 		return cnt;

@@ -19,10 +19,10 @@
  * 
 Example CLI:
 
-books report purchases 2001 24-dec-2011 22-oct-2012
-books report assistance 1001 24-dec-2011 22-oct-2012
-books report contracts
-books report roles Salesperson
+BooksCmd report purchases 2001 24-dec-2011 22-oct-2012
+BooksCmd report assistance 1001 24-dec-2011 22-oct-2012
+BooksCmd report contracts
+BooksCmd report roles Salesperson
 
 -- Staff (id, name, gender, dob, jobTitle, department, salary, phone, address)
 -- Customer (id, gender, dob, status, phone, ssn, name, address)
@@ -346,9 +346,9 @@ public class Report {
 
 	private int staffRoles(String[] args){
 
-		String s1 = "SELECT * FROM Staff WHERE jobTitle=";
+		String s1 = "SELECT * FROM Staff WHERE jobTitle='";
 		// s2 = Staff role
-		String s3 = "')";
+		String s3 = "'";
 
 		String q = s1+args[2]+s3;
 

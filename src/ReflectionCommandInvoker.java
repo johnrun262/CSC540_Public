@@ -33,7 +33,8 @@ public class ReflectionCommandInvoker {
     Sale.class,
     Staff.class,
     Vendor.class,
-    Purchase.class 
+    Purchase.class,
+    Stocks.class
   };
   
   private Connection connection;

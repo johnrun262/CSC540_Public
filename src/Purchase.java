@@ -297,7 +297,7 @@ public class Purchase extends AbstractCommandHandler {
 	 * Check the Purchase Id. Throw a ValidationException if there is an error.
 	 *
 	 * Must be a parseable integer greater than equal to zero and
-	 * exist in the books table.
+	 * exist in the purchase table.
 	 *
 	 * @param id
 	 *   The id of the purchase record
@@ -385,7 +385,7 @@ public class Purchase extends AbstractCommandHandler {
 	 * Check the VendorId. Throw a ValidationException if there is an error.
 	 *
 	 * Must be a parseable integer greater than equal to zero and
-	 * exist in the books table.
+	 * exist in the vendor table.
 	 *
 	 * @param vendorId
 	 *   The id of the record for the vendor from which a book purchased
@@ -428,7 +428,7 @@ public class Purchase extends AbstractCommandHandler {
 	 * Check the StaffId. Throw a ValidationException if there is an error.
 	 *
 	 * Must be a parseable integer greater than equal to zero and
-	 * exist in the books table.
+	 * exist in the staff table.
 	 *
 	 * @param staffId
 	 *   The id of the record for the staff member that purchased the book from the vendor

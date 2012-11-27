@@ -49,6 +49,14 @@ public class Book extends AbstractCommandHandler {
 			@Param("author") String author, 
 			@Param("retail price") String retailPrice) throws SQLException {
 
+		// validate Book parameters
+		try {
+			checkPrice(retailPrice);
+		} catch (ValidationException ex) {
+			System.out.println("Validation Error: " + ex.getMessage());
+			return;
+		}
+		
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("title", title);
 		params.put("author", author);
@@ -145,7 +153,7 @@ public class Book extends AbstractCommandHandler {
 			@Param("retail price") String retailPrice,
 			@Param("quantity") String quantity) throws SQLException {
 
-		// validate Book ID parameter
+		// validate Book parameters
 		try {
 			checkBookId(id);
 			checkPrice(retailPrice);

@@ -185,7 +185,7 @@ public class Purchase extends AbstractCommandHandler {
 	 *   The status of the order (ordered, received, shipped)
 	 */
 	// TODO this needs testing!
-	public void execUpdate(	
+	public void execUpdate(	 
 			@Param("id") String purId,
 			@Param("bookId") String bookId, 
 			@Param("vendorId") String vendorId, 
@@ -197,11 +197,12 @@ public class Purchase extends AbstractCommandHandler {
 
 		Double priceValue = null;
 		Integer qtyValue = null;
+		Integer purIDValue = null;
 
 		// validate input parameters
 		try {
 			// check the purchase record id is numeric and in database
-			checkPurId(purId);
+			purIDValue = checkPurId(purId);
 			// check book ID numeric and in database
 			checkBookId(bookId);
 			// check vendor ID numeric
@@ -212,12 +213,11 @@ public class Purchase extends AbstractCommandHandler {
 			qtyValue = checkQty(qty);
 			// check price numeric and >= 0
 			priceValue = checkPrice(price);
-			// check status ordered, shipped, received
-			checkStatus(status);
 			// check valid format date
 			// TODO uses date of birth routine but not DoB
 			ValidationHelpers.checkDateOfBirth(orderDate);
-
+			// check status ordered, shipped, received
+			status = checkStatus(status);
 
 		} catch (ValidationException ex) {
 			System.out.println("Validation Error: " + ex.getMessage());
@@ -235,7 +235,7 @@ public class Purchase extends AbstractCommandHandler {
 		params.put("status", status);
 
 
-	    updateRow(TABLE, "id", Integer.parseInt(purId), params);
+	    updateRow(TABLE, "id", purIDValue, params);
 
 		System.out.println("Update Purchase record with ID " + purId); 
 
@@ -302,9 +302,11 @@ public class Purchase extends AbstractCommandHandler {
 	 * @param id
 	 *   The id of the purchase record
 	 */
-	private void checkPurId(String purId) throws ValidationException {
+	private int checkPurId(String purId) throws ValidationException {
+		int idValue;
+		
 		try {
-			int idValue = Integer.parseInt(purId);
+			idValue = Integer.parseInt(purId);
 			if (idValue <= 0) {
 				throw new ValidationException("Purchase Id must be a positive integer: "+purId);
 			}
@@ -328,7 +330,7 @@ public class Purchase extends AbstractCommandHandler {
 				throw new ValidationException("Purchase Id must be in database: "+ purId);
 			}
 
-			return;
+			return idValue;
 
 		} catch (Exception e) {
 			throw new ValidationException("Exception Validating Purchase Id: " + e.getMessage());

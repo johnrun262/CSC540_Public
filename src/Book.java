@@ -299,12 +299,12 @@ public class Book extends AbstractCommandHandler {
 	private double checkPrice(String price) throws ValidationException {
 		try {
 			double priceValue = Double.parseDouble(price);
-			if (priceValue <= 0) {
+			if (priceValue < 0) {
 				throw new ValidationException("Price must be greater than or equal zero");
 			}
 			return priceValue;
 		} catch (Exception e) {
-			throw new ValidationException("Price must be a number");
+			throw new ValidationException("Price must be a positive number");
 		} 
 	} // checkPrice
 

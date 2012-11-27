@@ -269,7 +269,7 @@ public class Purchase extends AbstractCommandHandler {
 			}
 			return qtyValue;
 		} catch (Exception e) {
-			throw new ValidationException("Quantity must be a number");
+			throw new ValidationException("Quantity must be a number greater than zero");
 		}
 	} // checkQty
 
@@ -278,18 +278,18 @@ public class Purchase extends AbstractCommandHandler {
 	 *
 	 * Must be a parseable double greater than equal to zero.
 	 *
-	 * @param quantity
-	 *   The quantity of books purchased.
+	 * @param price
+	 *   The price of books purchased.
 	 */
 	private double checkPrice(String price) throws ValidationException {
 		try {
 			double priceValue = Double.parseDouble(price);
-			if (priceValue <= 0) {
+			if (priceValue < 0) {
 				throw new ValidationException("Price must be greater than or equal zero");
 			}
 			return priceValue;
 		} catch (Exception e) {
-			throw new ValidationException("Price must be a number");
+			throw new ValidationException("Price must be a positive number");
 		} 
 	} // checkPrice
 
@@ -314,7 +314,7 @@ public class Purchase extends AbstractCommandHandler {
 			throw new ValidationException("Purchase Id must be a number: "+purId); 
 		}
 		try {
-			// Book ID must be in book table
+			// purchase ID must be in purchase table
 			String sql = "SELECT id FROM Purchase Where id='"+purId+"'";
 
 			Statement statement = connection.createStatement();
@@ -400,7 +400,7 @@ public class Purchase extends AbstractCommandHandler {
 			throw new ValidationException("Vendor Id must be a number: "+vendorId);
 		}
 		try {
-			// Book ID must be in book table
+			// Vendor ID must be in vendor table
 			String sql = "SELECT id FROM Vendor Where id='"+vendorId+"'";
 
 			Statement statement = connection.createStatement();
@@ -443,7 +443,7 @@ public class Purchase extends AbstractCommandHandler {
 			throw new ValidationException("Staff Id must be a number: "+staffId);
 		}
 		try {
-			// Book ID must be in book table
+			// staff ID must be in staff table
 			String sql = "SELECT id FROM Staff Where id='"+staffId+"'";
 
 			Statement statement = connection.createStatement();

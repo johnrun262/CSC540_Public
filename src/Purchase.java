@@ -28,7 +28,9 @@ import java.util.TreeMap;
 
 public class Purchase extends AbstractCommandHandler {
 
-	private static String TABLE = "Purchase";
+	private static String STATUS_RECEIVED = "received";
+	private static String STATUS_ORDERED = "ordered";
+	private static String STATUS_SHIPPED = "shipped";
 
 	/*
 	 * Contruct a handler for staff objects.
@@ -66,11 +68,11 @@ public class Purchase extends AbstractCommandHandler {
 		// validate input parameters
 		try {
 			// check book ID numeric and in database
-			checkBookId(bookId);
+			ValidationHelpers.checkId(connection, bookId, ValidationHelpers.TABLE_BOOK);
 			// check vendor ID numeric
-			checkVendorId(vendorId);
+			ValidationHelpers.checkId(connection, vendorId, ValidationHelpers.TABLE_VENDOR);
 			// check staff ID numeric
-			checkStaffId(staffId);
+			ValidationHelpers.checkId(connection, staffId, ValidationHelpers.TABLE_STAFF);
 			// check quantity numeric and > 0
 			qtyValue = checkQty(qty);
 			// check price numeric and >= 0
@@ -86,7 +88,7 @@ public class Purchase extends AbstractCommandHandler {
 		Date todaysDate = new java.util.Date();
 		SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
 		String date = formatter.format(todaysDate);
-		
+
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("bookId", bookId);
 		params.put("vendorId", vendorId);
@@ -94,9 +96,9 @@ public class Purchase extends AbstractCommandHandler {
 		params.put("quantity", qtyValue);
 		params.put("wholesalePrice", priceValue);
 		params.put("orderDate", date);
-		params.put("status", "ordered");
+		params.put("status", STATUS_ORDERED);
 
-		int newID = insertRow(TABLE, "id", 1001, params);
+		int newID = insertRow(ValidationHelpers.TABLE_PURCHASE, "id", 1001, params);
 
 		System.out.println("Inserted Purchase record with ID " + newID + " into Database"); 
 
@@ -109,7 +111,7 @@ public class Purchase extends AbstractCommandHandler {
 	public void execAll() throws SQLException {
 
 		// Select all rows in the staff table and sort by ID
-		String sql = "SELECT * FROM " + TABLE + " ORDER BY id";
+		String sql = "SELECT * FROM " + ValidationHelpers.TABLE_PURCHASE + " ORDER BY id";
 
 		Statement statement = createStatement();
 		int cnt = displayPurchase(statement.executeQuery(sql));
@@ -126,14 +128,16 @@ public class Purchase extends AbstractCommandHandler {
 	 */
 	public void execDelete(@Param("staff id") String id) throws SQLException {
 
+		// check if the id is valid
 		try {
-			checkPurId(id);
+			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_PURCHASE);
 		} catch (ValidationException e) {
 			System.out.println("Validation Error: " + e.getMessage());
 			return;
 		}
-		
-		int count = deleteRow(TABLE, Integer.parseInt(id));
+
+		// do the delete
+		int count = deleteRow(ValidationHelpers.TABLE_PURCHASE, Integer.parseInt(id));
 
 		System.out.println("Deleted "+ count + " Staff with ID " + id + " from Database"); 
 
@@ -147,15 +151,16 @@ public class Purchase extends AbstractCommandHandler {
 	 */
 	public void execList(@Param("staff id") String id) throws SQLException {
 
+		// check if the id is valid
 		try {
-			checkPurId(id);
+			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_PURCHASE);
 		} catch (ValidationException e) {
 			System.out.println("Validation Error: " + e.getMessage());
 			return; 
 		}
-		
+
 		// Select row in the Staff table with ID
-		String sql = "SELECT * FROM " + TABLE + " WHERE id = "+ Integer.parseInt(id);
+		String sql = "SELECT * FROM " + ValidationHelpers.TABLE_PURCHASE + " WHERE id = "+ Integer.parseInt(id);
 
 		Statement statement = createStatement();
 		int cnt = displayPurchase(statement.executeQuery(sql));
@@ -202,13 +207,14 @@ public class Purchase extends AbstractCommandHandler {
 		// validate input parameters
 		try {
 			// check the purchase record id is numeric and in database
-			purIDValue = checkPurId(purId);
+			ValidationHelpers.checkId(connection, purId, ValidationHelpers.TABLE_PURCHASE);
+			purIDValue = Integer.parseInt(purId);
 			// check book ID numeric and in database
-			checkBookId(bookId);
+			ValidationHelpers.checkId(connection, bookId, ValidationHelpers.TABLE_BOOK);
 			// check vendor ID numeric
-			checkVendorId(vendorId);
+			ValidationHelpers.checkId(connection, vendorId, ValidationHelpers.TABLE_VENDOR);
 			// check staff ID numeric
-			checkStaffId(staffId);
+			ValidationHelpers.checkId(connection, staffId, ValidationHelpers.TABLE_STAFF);
 			// check quantity numeric and > 0
 			qtyValue = checkQty(qty);
 			// check price numeric and >= 0
@@ -235,19 +241,112 @@ public class Purchase extends AbstractCommandHandler {
 		params.put("status", status);
 
 
-	    updateRow(TABLE, "id", purIDValue, params);
+		updateRow(ValidationHelpers.TABLE_PURCHASE, "id", purIDValue, params);
 
 		System.out.println("Update Purchase record with ID " + purId); 
 
 	} // execUpdate
 
+	/**
+	 * Receive the specified purchase record
+	 * 
+	 * This function updates the status of the purchase to received
+	 * and adds the quantity to the book. All this is done as a
+	 * transaction.
+	 *
+	 * @param id
+	 *   The purchase id. Must be convertable to an integer.
+	 */
+	public void execRec(@Param("id") String purId) throws ValidationException, SQLException {
+
+		String purStatus = null;
+		int quantity = 0;
+		int bookId = 0;
+
+		// validate input parameters
+		try {
+			// check the purchase record id is numeric and in database
+			ValidationHelpers.checkId(connection, purId, ValidationHelpers.TABLE_PURCHASE);
+		} catch (ValidationException ex) {
+			System.out.println("Validation Error: " + ex.getMessage());
+			return;
+		}
+
+		// Start a transaction
+		try {
+			// Require consistency across multiple queries via serialized transaction isolation
+			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+
+			// Get information about purchase inside transaction so two tasks
+			// don't process the same receive.
+			String sql = "SELECT * FROM "+ValidationHelpers.TABLE_PURCHASE+" Where Id="+purId;
+
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			ResultSet result = statement.executeQuery(sql);
+
+			if (result.next()) {
+				// get the quantity from the result
+				quantity = result.getInt("quantity");
+				// get status
+				purStatus = result.getString("status");
+				// Get the book ID
+				bookId = result.getInt("bookId");
+			}
+
+			// Validate purchase is not already received
+			if (purStatus.equals(Purchase.STATUS_RECEIVED)) {
+				throw new ValidationException("Purchase already received: " + purId);
+			}
+
+
+			// Add quantity to quantity of book
+			sql = "UPDATE "+ValidationHelpers.TABLE_PURCHASE+" SET stockQuantity = stockQuantity + "+ quantity + " Where Id="+ bookId;
+
+			statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			int cnt = statement.executeUpdate(sql);
+			
+			if (cnt == 0) {
+				// should not happen
+				throw new ValidationException("Warning no books updated with ID " + bookId);
+			}
+			
+			// Change status to "received"
+			sql = "UPDATE "+ValidationHelpers.TABLE_PURCHASE+" SET status = '"+ Purchase.STATUS_RECEIVED + "' Where Id="+ purId;
+
+			statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			cnt = statement.executeUpdate(sql);
+			
+			if (cnt == 0) {
+				// should not happen
+				throw new ValidationException("Warning no purchases updated with ID " + purId);
+			}
+			
+			// Commit the transaction
+			connection.commit();
+			System.out.println("Received Purchase " + purId + " and Quantity increased by " + quantity + " for Book Id "+ bookId);
+
+
+		} catch (Exception ex) {
+			// abort if problem encountered
+			connection.rollback();
+			System.out.println("Purchase not received : " + ex.getMessage());
+		}
+
+		return;
+
+	}
+
 	// check the status passed from user is valid
 	private String checkStatus(String status) throws ValidationException {
 
 		Map<String, String> valid = new TreeMap<String, String>();
-		valid.put("O", "ordered");
-		valid.put("R", "received");
-		valid.put("S", "shipped");
+		valid.put("O", STATUS_ORDERED);
+		valid.put("R", STATUS_RECEIVED);
+		valid.put("S", STATUS_SHIPPED);
 
 		return validateCode(status, "Status", valid);
 
@@ -292,180 +391,6 @@ public class Purchase extends AbstractCommandHandler {
 			throw new ValidationException("Price must be a positive number");
 		} 
 	} // checkPrice
-
-	/**
-	 * Check the Purchase Id. Throw a ValidationException if there is an error.
-	 *
-	 * Must be a parseable integer greater than equal to zero and
-	 * exist in the purchase table.
-	 *
-	 * @param id
-	 *   The id of the purchase record
-	 */
-	private int checkPurId(String purId) throws ValidationException {
-		int idValue;
-		
-		try {
-			idValue = Integer.parseInt(purId);
-			if (idValue <= 0) {
-				throw new ValidationException("Purchase Id must be a positive integer: "+purId);
-			}
-		} catch (Exception e) {
-			throw new ValidationException("Purchase Id must be a number: "+purId); 
-		}
-		try {
-			// purchase ID must be in purchase table
-			String sql = "SELECT id FROM Purchase Where id='"+purId+"'";
-
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(purId)) {
-					throw new ValidationException("Purchase Id must be in database: "+ purId);
-				}
-			} else {
-				throw new ValidationException("Purchase Id must be in database: "+ purId);
-			}
-
-			return idValue;
-
-		} catch (Exception e) {
-			throw new ValidationException("Exception Validating Purchase Id: " + e.getMessage());
-		}
-
-	} // checkPurId
-	
-	/**
-	 * Check the BookId. Throw a ValidationException if there is an error.
-	 *
-	 * Must be a parseable integer greater than equal to zero and
-	 * exist in the books table.
-	 *
-	 * @param bookId
-	 *   The id of the record for the book purchased from vendor
-	 */
-	private void checkBookId(String bookId) throws ValidationException {
-		try {
-			int bookIdValue = Integer.parseInt(bookId);
-			if (bookIdValue <= 0) {
-				throw new ValidationException("Book Id must be a positive integer: "+bookId);
-			}
-		} catch (Exception e) {
-			throw new ValidationException("Book Id must be a number: "+bookId); 
-		}
-		try {
-			// Book ID must be in book table
-			String sql = "SELECT id FROM Book Where id='"+bookId+"'";
-
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(bookId)) {
-					throw new ValidationException("Book Id must be in database: "+ bookId);
-				}
-			} else {
-				throw new ValidationException("Book Id must be in database: "+ bookId);
-			}
-
-			return;
-
-		} catch (Exception e) {
-			throw new ValidationException("Exception Validating Book Id: " + e.getMessage());
-		}
-
-	} // checkBookId
-
-	/**
-	 * Check the VendorId. Throw a ValidationException if there is an error.
-	 *
-	 * Must be a parseable integer greater than equal to zero and
-	 * exist in the vendor table.
-	 *
-	 * @param vendorId
-	 *   The id of the record for the vendor from which a book purchased
-	 */
-	private void checkVendorId(String vendorId) throws ValidationException {
-		try {
-			int vendorIdValue = Integer.parseInt(vendorId);
-			if (vendorIdValue <= 0) {
-				throw new ValidationException("Vendor Id must be a positive integer: "+vendorId);
-			}
-		} catch (Exception e) {
-			throw new ValidationException("Vendor Id must be a number: "+vendorId);
-		}
-		try {
-			// Vendor ID must be in vendor table
-			String sql = "SELECT id FROM Vendor Where id='"+vendorId+"'";
-
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(vendorId)) {
-					throw new ValidationException("Vendor Id must be in database: "+ vendorId);
-				}
-			} else {
-				throw new ValidationException("Vendor Id must be in database: "+ vendorId);
-			}
-
-			return;
-
-		} catch (Exception e) {
-			throw new ValidationException("Exception Validating Vendor Id: " + e.getMessage());
-		}
-
-	} // checkVendorId
-
-	/**
-	 * Check the StaffId. Throw a ValidationException if there is an error.
-	 *
-	 * Must be a parseable integer greater than equal to zero and
-	 * exist in the staff table.
-	 *
-	 * @param staffId
-	 *   The id of the record for the staff member that purchased the book from the vendor
-	 */
-	private void checkStaffId(String staffId) throws ValidationException {
-		try {
-			int vendorIdValue = Integer.parseInt(staffId);
-			if (vendorIdValue <= 0) {
-				throw new ValidationException("Staff Id must be a positive integer: "+staffId);
-			}
-		} catch (Exception e) {
-			throw new ValidationException("Staff Id must be a number: "+staffId);
-		}
-		try {
-			// staff ID must be in staff table
-			String sql = "SELECT id FROM Staff Where id='"+staffId+"'";
-
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(staffId)) {
-					throw new ValidationException("Staff Id must be in database: "+ staffId);
-				}
-			} else {
-				throw new ValidationException("Staff Id must be in database: "+ staffId);
-			}
-
-			return;
-
-		} catch (Exception e) {
-			throw new ValidationException("Exception Validating Vendor Id: " + e.getMessage());
-		}
-
-	} // checkStaffId
 
 	/**
 	 * Display the purchase record from the result set and return the total count.

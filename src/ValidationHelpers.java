@@ -20,6 +20,7 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 
 public class ValidationHelpers {
+	
 	/**
 	 * Check the gender passed from user is valid. Throw a ValidationException if there is an error.
 	 *
@@ -51,6 +52,16 @@ public class ValidationHelpers {
 		}
 	}
 
+	// Table names used for validation
+	public static String TABLE_STOCKS = "Stocks";
+	public static String TABLE_PURCHASE = "Purchase";
+	public static String TABLE_ITEMORDER = "ItemOrder";
+	public static String TABLE_ORDERS = "Orders";
+	public static String TABLE_BOOK = "Book";
+	public static String TABLE_VENDOR = "Vendor";
+	public static String TABLE_CUSTOMER = "Customer";
+	public static String TABLE_STAFF = "Staff";
+	
 	/**
 	 * Check the Id. Throw a ValidationException if there is an error.
 	 *

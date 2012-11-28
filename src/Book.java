@@ -93,8 +93,10 @@ public class Book extends AbstractCommandHandler {
 
 		// validate Book ID parameter
 		try {
-			checkBookId(id);
-			checkBookIdForeign(id);
+			ValidationHelpers.checkId(connection, id, TABLE);
+			ValidationHelpers.checkIdNotForeign(connection, id, "Purchase", "bookId");
+			ValidationHelpers.checkIdNotForeign(connection, id, "ItemOrder", "bookId");
+			ValidationHelpers.checkIdNotForeign(connection, id, "Stocks", "bookId");
 		} catch (ValidationException ex) {
 			System.out.println("Validation Error: " + ex.getMessage());
 			return;
@@ -116,7 +118,7 @@ public class Book extends AbstractCommandHandler {
 
 		// validate Book ID parameter
 		try {
-			checkBookId(id);
+			ValidationHelpers.checkId(connection, id, TABLE);
 		} catch (ValidationException ex) {
 			System.out.println("Validation Error: " + ex.getMessage());
 			return;
@@ -155,7 +157,7 @@ public class Book extends AbstractCommandHandler {
 
 		// validate Book parameters
 		try {
-			checkBookId(id);
+			ValidationHelpers.checkId(connection, id, TABLE);
 			checkPrice(retailPrice);
 			checkQty(quantity);
 		} catch (ValidationException ex) {
@@ -173,100 +175,6 @@ public class Book extends AbstractCommandHandler {
 
 		System.out.println("Updated Book with ID " + id + " in Database"); 
 	}
-
-	/**
-	 * Check the BookId. Throw a ValidationException if there is an error.
-	 *
-	 * Must be a parseable integer greater than equal to zero and
-	 * exist in the books table.
-	 *
-	 * @param bookId
-	 *   The id of the record for the book purchased from vendor
-	 */
-	private void checkBookId(String bookId) throws ValidationException {
-		try {
-			int bookIdValue = Integer.parseInt(bookId);
-			if (bookIdValue <= 0) {
-				throw new ValidationException("Book Id must be a positive integer: "+bookId);
-			}
-		} catch (Exception e) {
-			throw new ValidationException("Book Id must be a number: "+bookId); 
-		}
-		try {
-			// Book ID must be in book table
-			String sql = "SELECT id FROM Book Where id='"+bookId+"'";
-
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(bookId)) {
-					throw new ValidationException("Book Id must be in database: "+ bookId);
-				}
-			} else {
-				throw new ValidationException("Book Id must be in database: "+ bookId);
-			}
-
-			return;
-
-		} catch (Exception e) {
-			throw new ValidationException("Exception Validating Book Id: " + e.getMessage());
-		}
-
-	} // checkBookId
-
-	/**
-	 * Check the BookId is not a Foreign Key in Purchase, Stocks, or ItemOrders. 
-	 * Throw a ValidationException if in exists.
-	 *
-	 * @param bookId
-	 *   The id of the record for the book purchased from vendor
-	 */
-	private void checkBookIdForeign(String bookId) throws ValidationException {
-
-		try {
-			// Book ID must not be in itemOrders table
-			String sql = "SELECT BookId FROM ItemOrder Where BookId='"+bookId+"'";
-
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				throw new ValidationException("Book Id must not be in ItemOrder: "+ bookId);
-			}
-
-			// Book ID must not be in Purchases table
-			sql = "SELECT BookId FROM Purchase Where BookId='"+bookId+"'";
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				throw new ValidationException("Book Id must not be in Purchase: "+ bookId);
-			}
-			
-			// Book ID must not be in Stocks table
-			sql = "SELECT BookId FROM Stocks Where BookId='"+bookId+"'";
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				throw new ValidationException("Book Id must not be in Stocks: "+ bookId);
-			}
-			
-			return;
-
-		} catch (Exception e) {
-			throw new ValidationException("Exception Validating Book Id: " + e.getMessage());
-		}
-
-	} // checkBookIdForeign
 
 	/**
 	 * Check the Quantity. Throw a ValidationException if there is an error.

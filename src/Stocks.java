@@ -51,9 +51,9 @@ public class Stocks extends AbstractCommandHandler {
 		// validate input parameters
 		try {
 			// check book ID numeric and in database
-			checkBookId(bookId);
-			// check vendor ID numeric
-			checkVendorId(vendorId);
+			ValidationHelpers.checkId(connection, bookId, "Book");
+			// check vendor ID numeric and in database
+			ValidationHelpers.checkId(connection, vendorId, "Vendor");
 			// check bookId, vendor Id pair not already in stocks
 			checkUnique(bookId, vendorId);
 
@@ -104,8 +104,10 @@ public class Stocks extends AbstractCommandHandler {
 
 		// validate the input parameters
 		try {
-			checkBookId(bookId);
-			checkVendorId(vendorId);
+			// check book ID numeric and in database
+			ValidationHelpers.checkId(connection, bookId, "Book");
+			// check vendor ID numeric and in database
+			ValidationHelpers.checkId(connection, vendorId, "Vendor");
 		} catch (ValidationException e) {
 			System.out.println("Validation Error: " + e.getMessage());
 			return;
@@ -133,17 +135,18 @@ public class Stocks extends AbstractCommandHandler {
 	 * @param bookid
 	 *   The book id. Must be convertable to an integer.
 	 */
-	public void execList(@Param("book id") String id) throws SQLException {
+	public void execList(@Param("book id") String bookId) throws SQLException {
 
 		try {
-			checkBookId(id);
+			// check book ID numeric and in database
+			ValidationHelpers.checkId(connection, bookId, "Book");
 		} catch (ValidationException e) {
 			System.out.println("Validation Error: " + e.getMessage());
 			return; 
 		}
 
 		// Select rows in the Stocks table with Book ID
-		String sql = "SELECT * FROM Vendor, " + TABLE + " WHERE vendor.id = stocks.vendorid AND stocks.bookid = "+ Integer.parseInt(id);
+		String sql = "SELECT * FROM Vendor, " + TABLE + " WHERE vendor.id = stocks.vendorid AND stocks.bookid = "+ Integer.parseInt(bookId);
 
 		Statement statement = createStatement();
 		int cnt = displayStocks(statement.executeQuery(sql));
@@ -162,92 +165,6 @@ public class Stocks extends AbstractCommandHandler {
 		System.out.println("Update not supported for Stocks Table"); 
 
 	} // execUpdate
-
-	/**
-	 * Check the BookId. Throw a ValidationException if there is an error.
-	 *
-	 * Must be a parseable integer greater than equal to zero and
-	 * exist in the books table.
-	 *
-	 * @param bookId
-	 *   The id of the record for the book purchased from vendor
-	 */
-	private void checkBookId(String bookId) throws ValidationException {
-		try {
-			int bookIdValue = Integer.parseInt(bookId);
-			if (bookIdValue <= 0) {
-				throw new ValidationException("Book Id must be a positive integer: "+bookId);
-			}
-		} catch (Exception e) {
-			throw new ValidationException("Book Id must be a number: "+bookId); 
-		}
-		try {
-			// Book ID must be in book table
-			String sql = "SELECT id FROM Book Where id='"+bookId+"'";
-
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(bookId)) {
-					throw new ValidationException("Book Id must be in database: "+ bookId);
-				}
-			} else {
-				throw new ValidationException("Book Id must be in database: "+ bookId);
-			}
-
-			return;
-
-		} catch (Exception e) {
-			throw new ValidationException("Exception Validating Book Id: " + e.getMessage());
-		}
-
-	} // checkBookId
-
-	/**
-	 * Check the VendorId. Throw a ValidationException if there is an error.
-	 *
-	 * Must be a parseable integer greater than equal to zero and
-	 * exist in the vendor table.
-	 *
-	 * @param vendorId
-	 *   The id of the record for the vendor from which a book purchased
-	 */
-	private void checkVendorId(String vendorId) throws ValidationException {
-		try {
-			int vendorIdValue = Integer.parseInt(vendorId);
-			if (vendorIdValue <= 0) {
-				throw new ValidationException("Vendor Id must be a positive integer: "+vendorId);
-			}
-		} catch (Exception e) {
-			throw new ValidationException("Vendor Id must be a number: "+vendorId);
-		}
-		try {
-			// Vendor ID must be in vendor table
-			String sql = "SELECT id FROM Vendor Where id='"+vendorId+"'";
-
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(vendorId)) {
-					throw new ValidationException("Vendor Id must be in database: "+ vendorId);
-				}
-			} else {
-				throw new ValidationException("Vendor Id must be in database: "+ vendorId);
-			}
-
-			return;
-
-		} catch (Exception e) {
-			throw new ValidationException("Exception Validating Vendor Id: " + e.getMessage());
-		}
-
-	} // checkVendorId
 
 	/**
 	 * Check the BookId, VendorId pair is unique in the stocks table

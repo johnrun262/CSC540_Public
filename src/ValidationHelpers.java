@@ -57,8 +57,13 @@ public class ValidationHelpers {
 	 * Must be a parseable integer greater than equal to zero and
 	 * exist in the specified table.
 	 *
+	 * @param connection
+	 * 	The connection to the database
 	 * @param id
 	 *   The id of the record for the table to be checked
+	 * @ param Table
+	 *   The table that the id should exist in
+	 *   
 	 */
 	public static void checkId(Connection connection, String Id, String Table) throws ValidationException {
 		try {
@@ -93,5 +98,43 @@ public class ValidationHelpers {
 		}
 
 	} // checkId
+
+	/**
+	 * Check the Id is not a Foreign Key in table specified. 
+	 * Throw a ValidationException if in exists.
+	 *
+	 * @param connection
+	 * 	 The connection to the database
+	 * @param Id
+	 *   The id of the record that should not be a foreign key
+	 * @param Table
+	 *   The table that the id should not be a foreign key in
+	 * @param field
+	 *   The field that should not match the id
+	 */
+	public static void checkIdNotForeign(Connection connection, String Id, String Table, String Field) throws ValidationException {
+
+		try {
+			// ID must not be in Table in Field
+			String sql = "SELECT Count(*) AS count FROM "+Table+" Where "+Field+"='"+Id+"'";
+
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			ResultSet result = statement.executeQuery(sql);
+
+			if (result.next()) {
+				int cnt = result.getInt("count");
+				if (cnt > 0) {
+					throw new ValidationException(Id+" must not be in Field "+Field+" of Table "+ Table);
+				}
+			}
+
+			return;
+
+		} catch (Exception e) {
+			throw new ValidationException("Exception Validating Foriegn Key Id: " + e.getMessage());
+		}
+
+	} // checkIdForeign
 
 }

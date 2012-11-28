@@ -127,8 +127,9 @@ public class Staff extends AbstractCommandHandler {
 
 		// validate Staff ID parameter
 		try {
-			checkStaffId(id);
-			checkStaffIdForeign(id);
+			ValidationHelpers.checkId(connection, id, "Staff");
+			ValidationHelpers.checkIdNotForeign(connection, id, "Purchase", "StaffId");
+			ValidationHelpers.checkIdNotForeign(connection, id, "Orders", "StaffId");
 		} catch (ValidationException ex) {
 			System.out.println("Validation Error: " + ex.getMessage());
 			return;
@@ -150,7 +151,7 @@ public class Staff extends AbstractCommandHandler {
 
 		// validate Staff ID parameter
 		try {
-			checkStaffId(id);
+			ValidationHelpers.checkId(connection, id, "Staff");
 		} catch (ValidationException ex) {
 			System.out.println("Validation Error: " + ex.getMessage());
 			return;
@@ -205,7 +206,7 @@ public class Staff extends AbstractCommandHandler {
 		Double salaryValue = null;
 		// validate input parameters
 		try {
-			checkStaffId(id);
+			ValidationHelpers.checkId(connection, id, "Staff");
 			gender = ValidationHelpers.checkGender(gender);
 			salaryValue = checkSalary(salary);
 			ValidationHelpers.checkDateOfBirth(dob);
@@ -252,22 +253,6 @@ public class Staff extends AbstractCommandHandler {
 			return salaryValue;
 		} catch (Exception e) {
 			throw new ValidationException("Salary must be a number");
-		}
-	}
-
-	/**
-	 * Check the gender passed from user is valid. Throw a ValidationException if there is an error.
-	 *
-	 * Must be one of: M or F.
-	 *
-	 * @param gender
-	 *   The staff's gender
-	 */
-	private String checkGender(String gender) throws ValidationException {
-		if (gender.equalsIgnoreCase("F") || gender.equalsIgnoreCase("M")) {
-			return gender.toUpperCase();
-		} else {
-			throw new ValidationException("Gender must equal F or M: " + gender);
 		}
 	}
 
@@ -336,90 +321,7 @@ public class Staff extends AbstractCommandHandler {
 		return validateCode(loc, "Work Location", valid);
 
 	} // checkLoc
-
-	/**
-	 * Check the Staff ID. Throw a ValidationException if there is an error.
-	 *
-	 * Must be a parseable integer greater than equal to zero and
-	 * exist in the staff table.
-	 *
-	 * @param staffId
-	 *   The id of the record for the staff member
-	 */
-	private void checkStaffId(String staffId) throws ValidationException {
-		try {
-			int staffIdValue = Integer.parseInt(staffId);
-			if (staffIdValue <= 0) {
-				throw new ValidationException("Staff Id must be a positive integer: "+staffId);
-			}
-		} catch (Exception e) {
-			throw new ValidationException("Staff Id must be a number: "+staffId); 
-		}
-		try {
-			// Book ID must be in book table
-			String sql = "SELECT id FROM Staff Where id='"+staffId+"'";
-
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				int id = result.getInt("id");
-				if (id != Integer.parseInt(staffId)) {
-					throw new ValidationException("Staff Id must be in database: "+ staffId);
-				}
-			} else {
-				throw new ValidationException("Staff Id must be in database: "+ staffId);
-			}
-
-			return;
-
-		} catch (Exception e) {
-			throw new ValidationException("Exception Validating Staff Id: " + e.getMessage());
-		}
-
-	} // checkStaffId
-
-	/**
-	 * Check the StaffId is not a Foreign Key in Purchase or Orders. 
-	 * Throw a ValidationException if in exists.
-	 *
-	 * @param StaffId
-	 *   The id of the record for the staff member
-	 */
-	private void checkStaffIdForeign(String staffId) throws ValidationException {
-
-		try {
-			// Vendor ID must not be in Purchases table
-			String sql = "SELECT staffId FROM Purchase Where staffId='"+staffId+"'";
-
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			ResultSet result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				throw new ValidationException("Staff Id must not be in Purchase: "+ staffId);
-			}
-
-			// Staff ID must not be in Orders table
-			sql = "SELECT staffId FROM Orders Where staffId='"+staffId+"'";
-
-			statement = connection.createStatement();
-			statement.setQueryTimeout(10);
-			result = statement.executeQuery(sql);
-
-			if (result.next()) {
-				throw new ValidationException("Staff Id must not be in Stocks: "+ staffId);
-			}
-
-			return;
-
-		} catch (Exception e) {
-			throw new ValidationException("Exception Validating Staff Id: " + e.getMessage());
-		}
-
-	} // checkStaffIdForeign
-
+	
 	/**
 	 * Display the staff from the result set and return the total count.
 	 */

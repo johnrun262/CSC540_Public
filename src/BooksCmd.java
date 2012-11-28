@@ -27,7 +27,7 @@ public class BooksCmd {
 
 	// Put your oracle ID and password here
 	private static final String user = "jlloyd";
-	private static final String password = "xxxxx";
+	private static final String password = "XXXX";
 
 
 	private static enum Operations {BILLING, BOOK, CUSTOMER, PURCHASE, REPORT, SALE, STAFF, STOCKS, VENDOR};
@@ -40,7 +40,7 @@ public class BooksCmd {
 			System.out.print(args[i]+" ");
 		}
 		System.out.println();System.out.println();
-		
+
 		// We need at least one command
 		if (args.length < 1) {
 			usage();
@@ -64,10 +64,10 @@ public class BooksCmd {
 				System.exit(-1);
 			}
 
-      if (invokeViaReflection(connection, args)) {
-        return;
-      }
-      
+			if (invokeViaReflection(connection, args)) {
+				return;
+			}
+
 			// switch on the command type and then create a member of 
 			// that class to handle the request.
 			switch (Operations.valueOf(args[0].toUpperCase())) {
@@ -89,12 +89,11 @@ public class BooksCmd {
 				}
 
 				break;
-				
+
 			} // switch
 
 		} catch (IllegalArgumentException e) {
 			usage();
-      e.printStackTrace();
 		} catch(Throwable oops) {
 			// print a stack trace if something goes wrong
 			oops.printStackTrace();
@@ -126,9 +125,9 @@ public class BooksCmd {
 
 	} // close
 
-  static boolean invokeViaReflection(Connection connection, String[] args) throws Exception {
-    ReflectionCommandInvoker invoker = new ReflectionCommandInvoker(connection);
-    return invoker.execute(args);
-  }
+	static boolean invokeViaReflection(Connection connection, String[] args) throws Exception {
+		ReflectionCommandInvoker invoker = new ReflectionCommandInvoker(connection);
+		return invoker.execute(args);
+	}
 
 } // BooksCmd

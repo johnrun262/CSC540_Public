@@ -121,7 +121,7 @@ public class Setup extends AbstractCommandHandler {
 				"id INTEGER PRIMARY KEY NOT NULL,"+ 
 				"staffId INTEGER NOT NULL,"+ 
 				"customerId INTEGER NOT NULL,"+ 
-				"status CHAR(8) CHECK (status IN ('ordered', 'received', 'shipped', 'paid')),"+ 
+				"status CHAR(8) CONSTRAINT ORDERS_STATUS CHECK (status IN ('ordered', 'received', 'shipped', 'paid')),"+ 
 				"orderDate DATE NOT NULL,"+
 				"paidDate DATE,"+ 
 				"FOREIGN KEY (staffId) REFERENCES Staff(id),"+

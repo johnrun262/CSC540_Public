@@ -28,7 +28,7 @@ public class BooksCmd {
 
 	// Put your oracle ID and password here
 	private static final String user = "jlloyd";
-	private static final String password = "XXXX";
+	private static final String password = "PASSW0RD";
 
 	// First Level Commands
 	private static enum Operations {BILLING, BOOK, CUSTOMER, PURCHASE, REPORT, SALE, STAFF, STOCKS, VENDOR};
@@ -36,9 +36,9 @@ public class BooksCmd {
 	public static void main(String[] args) {
 
 		System.out.println();
-		
+
 		// spit out parameters read
-/*		for (int i=0;i<args.length;i++){
+		/*		for (int i=0;i<args.length;i++){
 			System.out.print(args[i]+" ");
 		}
 		System.out.println();System.out.println();*/
@@ -74,15 +74,6 @@ public class BooksCmd {
 			// catches commands that need processing not done by
 			// the command handler
 			switch (Operations.valueOf(args[0].toUpperCase())) {
-
-			case BILLING:
-
-				Billing billing = new Billing(connection); 
-				if (billing.exec(args) == -1){
-					System.out.println("Invalid Billing request!");
-				}
-
-				break;
 
 			case REPORT:
 

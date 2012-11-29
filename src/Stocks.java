@@ -24,8 +24,6 @@ import java.util.Map;
 
 public class Stocks extends AbstractCommandHandler {
 
-	private static String TABLE = "Stocks";
-
 	/*
 	 * Contruct a handler for staff objects.
 	 */
@@ -65,7 +63,7 @@ public class Stocks extends AbstractCommandHandler {
 
 		try {
 			// Prepare the insert statement
-			String sql = "INSERT INTO " + TABLE + " VALUES (" + bookId + ", " + vendorId + ")";
+			String sql = "INSERT INTO " + ValidationHelpers.TABLE_STOCKS + " VALUES (" + bookId + ", " + vendorId + ")";
 			PreparedStatement insertStatement = prepareStatement(sql);
 
 			// Execute that sucker!
@@ -85,7 +83,10 @@ public class Stocks extends AbstractCommandHandler {
 	public void execAll() throws SQLException {
 
 		// Select all rows in the staff table and sort by ID
-		String sql = "SELECT * FROM Vendor, " + TABLE + " Where vendor.id = stocks.vendorid ORDER BY bookId";
+		String sql = "SELECT * "+
+				"FROM "+ValidationHelpers.TABLE_VENDOR+", "+ ValidationHelpers.TABLE_STOCKS + ", "+ValidationHelpers.TABLE_BOOK +
+				" Where "+ValidationHelpers.TABLE_VENDOR+".id = "+ValidationHelpers.TABLE_STOCKS+".vendorid" +
+				" AND "+ValidationHelpers.TABLE_BOOK+".id = "+ValidationHelpers.TABLE_STOCKS+".bookid ORDER BY bookId";
 
 		Statement statement = createStatement();
 		int cnt = displayStocks(statement.executeQuery(sql));
@@ -115,7 +116,7 @@ public class Stocks extends AbstractCommandHandler {
 
 		try {
 			// Prepare the delete statement
-			String sql = "DELETE FROM " + TABLE + " Where bookId='"+bookId+"' AND vendorId='"+vendorId+"'";
+			String sql = "DELETE FROM " + ValidationHelpers.TABLE_STOCKS + " Where bookId='"+bookId+"' AND vendorId='"+vendorId+"'";
 			PreparedStatement deleteStatement = prepareStatement(sql);
 
 			// Execute that sucker!
@@ -146,8 +147,12 @@ public class Stocks extends AbstractCommandHandler {
 		}
 
 		// Select rows in the Stocks table with Book ID
-		String sql = "SELECT * FROM Vendor, " + TABLE + " WHERE vendor.id = stocks.vendorid AND stocks.bookid = "+ Integer.parseInt(bookId);
-
+		String sql = "SELECT * "+ 
+				"FROM "+ValidationHelpers.TABLE_VENDOR+", "+ ValidationHelpers.TABLE_STOCKS + ", "+ValidationHelpers.TABLE_BOOK +
+				" Where "+ValidationHelpers.TABLE_VENDOR+".id = "+ValidationHelpers.TABLE_STOCKS+".vendorid" +
+				" AND "+ValidationHelpers.TABLE_BOOK+".id = "+ValidationHelpers.TABLE_STOCKS+".bookid "+
+				" AND "+ValidationHelpers.TABLE_STOCKS+".bookid = "+ Integer.parseInt(bookId);
+		
 		Statement statement = createStatement();
 		int cnt = displayStocks(statement.executeQuery(sql));
 
@@ -206,11 +211,12 @@ public class Stocks extends AbstractCommandHandler {
 		while (result.next()) {
 			cnt++;
 			int bookId = result.getInt("bookId");
+			String title = result.getString("title");
 			int vendorId = result.getInt("vendorId");
 			String vendorName = result.getString("name");
 			String vendorPhone = result.getString("phone");
 
-			System.out.println(cnt+"\tBook ID: "+bookId+"\tVendor ID: "+vendorId+"\tVendor Name: "+vendorName+"\tVendor Phone: "+vendorPhone);
+			System.out.println(cnt+"\tBook: "+title+"("+bookId+")\tVendor : "+vendorName+"("+vendorId+")\tVendor Phone: "+vendorPhone);
 		}
 
 		return cnt;

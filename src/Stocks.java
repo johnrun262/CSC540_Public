@@ -49,9 +49,9 @@ public class Stocks extends AbstractCommandHandler {
 		// validate input parameters
 		try {
 			// check book ID numeric and in database
-			ValidationHelpers.checkId(connection, bookId, "Book");
+			ValidationHelpers.checkId(connection, bookId, ValidationHelpers.TABLE_BOOK);
 			// check vendor ID numeric and in database
-			ValidationHelpers.checkId(connection, vendorId, "Vendor");
+			ValidationHelpers.checkId(connection, vendorId, ValidationHelpers.TABLE_VENDOR);
 			// check bookId, vendor Id pair not already in stocks
 			checkUnique(bookId, vendorId);
 
@@ -106,9 +106,9 @@ public class Stocks extends AbstractCommandHandler {
 		// validate the input parameters
 		try {
 			// check book ID numeric and in database
-			ValidationHelpers.checkId(connection, bookId, "Book");
+			ValidationHelpers.checkId(connection, bookId, ValidationHelpers.TABLE_BOOK);
 			// check vendor ID numeric and in database
-			ValidationHelpers.checkId(connection, vendorId, "Vendor");
+			ValidationHelpers.checkId(connection, vendorId, ValidationHelpers.TABLE_VENDOR);
 		} catch (ValidationException e) {
 			System.out.println("Validation Error: " + e.getMessage());
 			return;
@@ -140,7 +140,7 @@ public class Stocks extends AbstractCommandHandler {
 
 		try {
 			// check book ID numeric and in database
-			ValidationHelpers.checkId(connection, bookId, "Book");
+			ValidationHelpers.checkId(connection, bookId, ValidationHelpers.TABLE_BOOK);
 		} catch (ValidationException e) {
 			System.out.println("Validation Error: " + e.getMessage());
 			return; 

@@ -468,7 +468,8 @@ public class Purchase extends AbstractCommandHandler {
 					"\tStaff ID: "+staffId+
 					"\tQty: "+qty+
 					"\tStatus: "+status+
-					"\tWholesale Price: "+price+
+					"\tWholesale Price: $"+price+
+					"\tTotal Purchase: $"+qty*price+
 					"\tPaid Date: "+paidDate);
 			System.out.println();
 		}

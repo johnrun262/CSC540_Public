@@ -217,6 +217,7 @@ public class Stocks extends AbstractCommandHandler {
 			String vendorPhone = result.getString("phone");
 
 			System.out.println(cnt+"\tBook: "+title+"("+bookId+")\tVendor : "+vendorName+"("+vendorId+")\tVendor Phone: "+vendorPhone);
+			System.out.println();
 		}
 
 		return cnt;

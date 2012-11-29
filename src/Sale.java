@@ -83,6 +83,47 @@ public class Sale extends AbstractCommandHandler {
 	}
 
 	/**
+	 * Display the properties of a specific customer within
+	 * date range.
+	 *
+	 * @param id
+	 *   The order id. Must be convertable to an integer.
+	 */
+	public void execCustomer(@Param("Customer Id") String customerId, 
+			@Param(value="Begin Date", optional=true) String beginDate, 
+			@Param(value="End Date", optional=true) String endDate) throws SQLException {
+		int customerIdValue;
+
+		// Validate the inputs
+		try {
+			customerIdValue = ValidationHelpers.checkId(connection, customerId, ValidationHelpers.TABLE_CUSTOMER);
+			// says check DoB but validates date correct format
+			if (beginDate != null) ValidationHelpers.checkDateOfBirth(beginDate);
+			if (endDate != null) ValidationHelpers.checkDateOfBirth(endDate);
+		} catch (ValidationException ex) {
+			System.out.println("Validation Error: " + ex.getMessage());
+			return;
+		}
+
+		// build the where clause to select customer within date range (if supplied)
+		String where = "c.id=" + customerIdValue +" ";
+		if (endDate != null) {
+			where = where + "AND o.orderDate <= '"+ endDate + "' ";	
+		}
+		if (beginDate != null) {
+			where = where + "AND o.orderDate >= '"+ beginDate + "' ";	
+		}
+		
+		// Select row in the Book table with ID
+		String sql = getOrderSql(where);
+	
+		// Display order-level info.
+		Statement statement = createStatement();
+		displayOrders(statement.executeQuery(sql));
+
+	}
+	
+	/**
 	 * Create a customer sale.
 	 *
 	 * @param staff

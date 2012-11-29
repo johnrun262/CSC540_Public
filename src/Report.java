@@ -87,51 +87,11 @@ public class Report extends AbstractCommandHandler {
 	 */
 
 	public void execPurchases(@Param("Customer Id") String customerId, 
-			@Param("Begin Date") String beginDate, 
-			@Param("End Date") String endDate) throws SQLException {
+			@Param(value="Begin Date", optional=true) String beginDate, 
+			@Param(value="End Date", optional=true) String endDate) throws SQLException {
 
-		// Create a hash map
-		//Map<String, String> args = new HashMap<String, String>();
-		//m.put(args1);
-
-		String s1 = "SELECT co.customerId, co.orderDate, bk.title, co.salePrice, co.quantity FROM Book bk, (SELECT DISTINCT * FROM Orders NATURAL JOIN ItemOrder WHERE orderId=id AND customerId=";
-		// s2 = Customer ID like 2001
-		String s3 = ") co WHERE bk.id=co.bookId AND (co.orderDate >= '";
-		// s4 = Beginning date of date range like 24-dec-2011
-		String s5 = "' AND co.orderDate <= '";
-		// s6 = Ending data of date range like 22-oct-2012
-		String s7 = "')";
-
-		String q = s1+customerId+s3+beginDate+s5+endDate+s7;
-
-		// Test
-		System.out.println(q);
-
-		try {
-
-			// Create a statement instance that will be sending
-			// your SQL statements to the DBMS
-			Statement statement = connection.createStatement();
-
-			ResultSet result = statement.executeQuery(q);
-
-			System.out.println(); // skip a line
-			while (result.next()) {
-
-				int cid = result.getInt("customerId");
-				String ord = result.getString("orderDate");
-				String tit = result.getString("title");
-				String sal = result.getString("salePrice");
-				//int ret = result.getInt("retailPrice");
-				int qua = result.getInt("quantity");
-
-				System.out.println(cid + " " + ord + " " + tit + " " + sal + " " + qua);
-				//System.out.println(tit);
-			}
-
-		} catch(Exception ex) {
-			System.out.println("Error Creating Purchase History: " + ex.getMessage());
-		}
+		Sale sale = new Sale(connection);
+		sale.execCustomer(customerId, beginDate, endDate);
 
 		return;
 	} // execPurchaseHistory

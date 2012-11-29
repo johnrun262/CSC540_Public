@@ -107,7 +107,8 @@ public class Setup extends AbstractCommandHandler {
 				"id INTEGER PRIMARY KEY NOT NULL,"+
 				"phone VARCHAR(12) NOT NULL,"+
 				"name VARCHAR(30) NOT NULL,"+ 
-				"address VARCHAR(255) NOT NULL "+
+				"address VARCHAR(255) NOT NULL," +
+				"endDate DATE NOT NULL "+
 				")");
 		sqlArray.add("CREATE TABLE Book ("+
 				"id INTEGER PRIMARY KEY NOT NULL,"+
@@ -426,16 +427,16 @@ public class Setup extends AbstractCommandHandler {
 				"3001,"+
 				"'505-435-1029',"+
 				"'Turners Inc.',"+
-				"'34 Page St'"+
-				// TODO End Date 20-sep-2012
+				"'34 Page St',"+
+				"'1-jun-2012'"+
 				")");
 
 		sqlArray.add("INSERT INTO Vendor VALUES ("+
 				"3002,"+
 				"'234-432-9485',"+
 				"'Print and Go',"+
-				"'432 Letter Lane'"+
-				// TODO End Date 1-jun-2012
+				"'432 Letter Lane',"+
+				"'20-sep-2012'"+
 				")");
 		
 		for (String sql : sqlArray) {

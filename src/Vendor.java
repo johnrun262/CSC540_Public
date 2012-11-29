@@ -14,6 +14,10 @@
  * 
  */
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.sql.Connection;
@@ -49,10 +53,23 @@ public class Vendor extends AbstractCommandHandler {
 			@Param("phone") String phone, 
 			@Param("address") String address) throws SQLException {
 
+		// Automatically set end date to one year from now
+		String sqlDate;
+		try {
+			Calendar now = new GregorianCalendar();
+			Calendar yearFromNow = new GregorianCalendar();
+			yearFromNow.set(Calendar.YEAR, now.get(Calendar.YEAR)+1);
+			SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
+			sqlDate = format.format(yearFromNow.getTime());
+		} catch (Exception e){
+			System.out.println("Problem setting date of contract expiration: " + e.getMessage());
+			return;
+		}
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("name", name);
 		params.put("phone", phone);
 		params.put("address", address);
+		params.put("endDate", sqlDate);
 
 		int newID = insertRow(TABLE, "id", 3001, params);
 
@@ -150,11 +167,26 @@ public class Vendor extends AbstractCommandHandler {
 			System.out.println("Validation Error: " + ex.getMessage());
 			return;
 		}
+
+		String sqlDate;
+
+		// Automatically renew end date to one year from now
+		try {
+			Calendar now = new GregorianCalendar();
+			Calendar yearFromNow = new GregorianCalendar();
+			yearFromNow.set(Calendar.YEAR, now.get(Calendar.YEAR)+1);
+			SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
+			sqlDate = format.format(yearFromNow.getTime());
+		} catch (Exception e){
+			System.out.println("Problem setting date of contract expiration: " + e.getMessage());
+			return;
+		}
 		
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("name", name);
 		params.put("phone", phone);
 		params.put("address", address);
+		params.put("endDate", sqlDate);
 
 		updateRow(TABLE, "id", Integer.parseInt(id), params);
 
@@ -174,7 +206,9 @@ public class Vendor extends AbstractCommandHandler {
 			String name = result.getString("name");
 			String phone = result.getString("phone");
 			String address = result.getString("address");
-			System.out.println(cnt+"\tID: "+id+"\tName: "+name+"\tPhone: "+phone+"\tAddress: "+address);
+			Date endDate = result.getDate("endDate");
+			System.out.println(cnt+"\tID: "+id+"\tName: "+name+"\tPhone: "+phone+"\tAddress: "+address+"\tEnd Date: "+endDate);
+			System.out.println();
 		}
 		return cnt;
 

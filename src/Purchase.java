@@ -207,8 +207,7 @@ public class Purchase extends AbstractCommandHandler {
 		// validate input parameters
 		try {
 			// check the purchase record id is numeric and in database
-			ValidationHelpers.checkId(connection, purId, ValidationHelpers.TABLE_PURCHASE);
-			purIDValue = Integer.parseInt(purId);
+			purIDValue = ValidationHelpers.checkId(connection, purId, ValidationHelpers.TABLE_PURCHASE);
 			// check book ID numeric and in database
 			ValidationHelpers.checkId(connection, bookId, ValidationHelpers.TABLE_BOOK);
 			// check vendor ID numeric

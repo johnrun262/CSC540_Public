@@ -35,6 +35,7 @@ public class ReflectionCommandInvoker {
 		Staff.class,
 		Vendor.class,
 		Purchase.class,
+		Report.class,
 		Setup.class,
 		Stocks.class
 	};

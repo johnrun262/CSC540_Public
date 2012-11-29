@@ -28,7 +28,7 @@ public class BooksCmd {
 
 	// Put your oracle ID and password here
 	private static final String user = "jlloyd";
-	private static final String password = "XXXX";
+	private static final String password = "PASSW0RD";
 
 	// First Level Commands
 	private static enum Operations {BILLING, BOOK, CUSTOMER, PURCHASE, REPORT, SALE, STAFF, STOCKS, VENDOR};
@@ -68,23 +68,6 @@ public class BooksCmd {
 
 			// execute command via command handler
 			invokeViaReflection(connection, args);
-
-			// switch on the command type and then create a member of 
-			// that class to handle the request.
-			// catches commands that need processing not done by
-			// the command handler
-			switch (Operations.valueOf(args[0].toUpperCase())) {
-
-			case REPORT:
-
-				Report rpt = new Report(connection); 
-				if (rpt.exec(args) == -1){
-					System.out.println("Invalid Report request!");
-				}
-
-				break;
-
-			} // switch
 
 		} catch (IllegalArgumentException e) {
 			usage();

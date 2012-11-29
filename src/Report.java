@@ -58,90 +58,14 @@ SELECT * FROM Staff WHERE jobTitle='Management';
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
-public class Report {
-
-	private Connection connection = null;
-	private Statement statement = null;
-	private ResultSet result = null;
-
-	private static enum ReportCmds {ASSISTANCE, CONTRACTS, PURCHASES, ROLES};
+public class Report extends AbstractCommandHandler {
 
 	// Constructor
-	Report(Connection connection){
-
-		this.connection = connection;
-
-		try {
-
-			// Create a statement instance that will be sending
-			// your SQL statements to the DBMS
-			this.statement = connection.createStatement();
-
-		} catch(Throwable oops) {
-			oops.printStackTrace();
-		}
-
-	}
-
-	/*
-	 * Method: exec
-	 * 
-	 * Determine report type requested
-	 * 
-	 * Input:
-	 * args[0] = "report"
-	 * args[1] = "purchases" | "assistance" | "contracts" | "roles"
-	 * 
-	 * Returns:
-	 * -1 = unknown report request
-	 */
-
-	public int exec(String[] args){
-
-		if (args.length < 2){
-			usage();
-			return -1;
-		}
-
-		try {
-			switch (ReportCmds.valueOf(args[1].toUpperCase())) {
-			case ASSISTANCE:
-				System.out.println("Processing \"report assistance\" request");
-				return salespersonAssist(args);
-
-
-			case CONTRACTS:
-
-				System.out.println("Processing \"report contracts\" request");
-				return vendorContracts(args);
-
-			case PURCHASES:
-				System.out.println("Processing \"report purchases\" request");
-				return purchaseHistory(args);
-
-			case ROLES:
-
-				System.out.println("Processing \"report roles\" request");
-				return staffRoles(args);
-
-			} // switch
-
-		} catch (IllegalArgumentException e) {
-			usage();
-			return -1;
-		}
-		
-		return 0;
-		
-	} 
-
-	private static void usage() {
-		System.out.println("Subcommand Required. Legal values:");
-		for (ReportCmds t : ReportCmds.values()) {
-			System.out.println(t.toString());
-		}
+	public Report(Connection connection){
+		super(connection);
 	}
 
 	/*
@@ -151,15 +75,20 @@ public class Report {
 	 * The constants used for customerId, and orderDate range will be replaced by user entered values.
 	 * 
 	 * Input:
-	 * args[2] = Customer ID
-	 * args[3] = Beginning date of date range
-	 * args[4] = Ending date of date range
+	 * @param customerId
+	 * 	Customer ID
+	 * @param beginDate
+	 * 	Beginning date of date range
+	 * @param endDate
+	 * 	Ending date of date range
 	 * 
 	 * Output:
 	 * Print report
 	 */
 
-	private int purchaseHistory(String[] args){
+	public void execPurchases(@Param("Customer Id") String customerId, 
+			@Param("Begin Date") String beginDate, 
+			@Param("End Date") String endDate) throws SQLException {
 
 		// Create a hash map
 		//Map<String, String> args = new HashMap<String, String>();
@@ -173,62 +102,60 @@ public class Report {
 		// s6 = Ending data of date range like 22-oct-2012
 		String s7 = "')";
 
-		String q = s1+args[2]+s3+args[3]+s5+args[4]+s7;
+		String q = s1+customerId+s3+beginDate+s5+endDate+s7;
 
 		// Test
 		System.out.println(q);
 
 		try {
 
-			try {
+			// Create a statement instance that will be sending
+			// your SQL statements to the DBMS
+			Statement statement = connection.createStatement();
 
-				// Create a statement instance that will be sending
-				// your SQL statements to the DBMS
-				statement = connection.createStatement();
+			ResultSet result = statement.executeQuery(q);
 
-				result = statement.executeQuery(q);
+			System.out.println(); // skip a line
+			while (result.next()) {
 
-				System.out.println(); // skip a line
-				while (result.next()) {
+				int cid = result.getInt("customerId");
+				String ord = result.getString("orderDate");
+				String tit = result.getString("title");
+				String sal = result.getString("salePrice");
+				//int ret = result.getInt("retailPrice");
+				int qua = result.getInt("quantity");
 
-					int cid = result.getInt("customerId");
-					String ord = result.getString("orderDate");
-					String tit = result.getString("title");
-					String sal = result.getString("salePrice");
-					//int ret = result.getInt("retailPrice");
-					int qua = result.getInt("quantity");
-
-					System.out.println(cid + " " + ord + " " + tit + " " + sal + " " + qua);
-					//System.out.println(tit);
-				}
-
-			} finally {
-				close(result);
-				close(statement);
+				System.out.println(cid + " " + ord + " " + tit + " " + sal + " " + qua);
+				//System.out.println(tit);
 			}
 
-		} catch(Throwable oops) {
-			oops.printStackTrace();
+		} catch(Exception ex) {
+			System.out.println("Error Creating Purchase History: " + ex.getMessage());
 		}
 
-		return 0;
-	}
+		return;
+	} // execPurchaseHistory
 
 	/*
-	 * Method: salespersonAssist
+	 * Method: execSalesAssist
 	 * 
 	 * Return information on all the customers a given salesperson assisted during a certain time period.
 	 * 
 	 * Input:
-	 * args[2] = Staff ID
-	 * args[3] = Beginning date of date range
-	 * args[4] = Ending date of date range
+	 * @param staffId
+	 * 	Staff ID
+	 * @param  beginDate
+	 * 	Beginning date of date range
+	 * @param endDate
+	 *  Ending date of date range
 	 * 
 	 * Output:
 	 * Print report
 	 */
 
-	private int salespersonAssist(String[] args){
+	public void execSales(@Param("Staff Id") String staffId, 
+			@Param("Begin Date") String beginDate, 
+			@Param("End Date") String endDate) throws SQLException {
 
 		String s1 = "SELECT id, name, address, gender, dob, status, phone, ssn FROM Customer, (SELECT DISTINCT customerId cid FROM Orders WHERE staffId=";
 		// s2 = Staff ID like 1001
@@ -238,48 +165,40 @@ public class Report {
 		// s6 = Ending data of date range like 22-oct-2012
 		String s7 = "')) WHERE id=cid";
 
-		String q = s1+args[2]+s3+args[3]+s5+args[4]+s7;
+		String q = s1+staffId+s3+beginDate+s5+endDate+s7;
 
 		// Test
 		System.out.println(q);
 
 		try {
+			// Create a statement instance that will be sending
+			// your SQL statements to the DBMS
+			Statement statement = connection.createStatement();
 
-			try {
+			ResultSet result = statement.executeQuery(q);
 
-				// Create a statement instance that will be sending
-				// your SQL statements to the DBMS
-				statement = connection.createStatement();
+			System.out.println(); // skip a line
+			while (result.next()) {
 
-				result = statement.executeQuery(q);
+				//String ord = result.getString("orderDate");
+				//int sid = result.getInt("staffId");
+				String snm = result.getString("name");
+				//int cid = result.getInt("cid");
+				//String cnm = result.getString("cname");
 
-				System.out.println(); // skip a line
-				while (result.next()) {
-
-					//String ord = result.getString("orderDate");
-					//int sid = result.getInt("staffId");
-					String snm = result.getString("name");
-					//int cid = result.getInt("cid");
-					//String cnm = result.getString("cname");
-
-					//System.out.println(ord + " " + sid + "  " + snm + "  " +  cid + "  " + cnm);
-					System.out.println(snm);
-				}
-
-			} finally {
-				close(result);
-				close(statement);
+				//System.out.println(ord + " " + sid + "  " + snm + "  " +  cid + "  " + cnm);
+				System.out.println(snm);
 			}
 
-		} catch(Throwable oops) {
-			oops.printStackTrace();
+		} catch(Exception ex) {
+			System.out.println("Error Creating Sales History: " + ex.getMessage());
 		}
 
-		return 0;
-	}
+		return;
+	} // execSalesAssist
 
 	/*
-	 * Method: vendorContracts
+	 * Method: execVendorContracts
 	 * 
 	 * Return information on all the vendors a particular store has contract with.
 	 * 
@@ -290,7 +209,7 @@ public class Report {
 	 * Print report
 	 */
 
-	private int vendorContracts(String[] args){
+	public void execVendors() throws SQLException {
 
 		String s1 = "SELECT DISTINCT * FROM Vendor";
 
@@ -301,36 +220,30 @@ public class Report {
 
 		try {
 
-			try {
+			// Create a statement instance that will be sending
+			// your SQL statements to the DBMS
+			Statement statement = connection.createStatement();
 
-				// Create a statement instance that will be sending
-				// your SQL statements to the DBMS
-				statement = connection.createStatement();
+			ResultSet result = statement.executeQuery(q);
 
-				result = statement.executeQuery(q);
+			System.out.println(); // skip a line
+			while (result.next()) {
 
-				System.out.println(); // skip a line
-				while (result.next()) {
+				int id = result.getInt("id");
+				String pho = result.getString("phone");
+				String nam = result.getString("name");
+				String add = result.getString("address");
 
-					int id = result.getInt("id");
-					String pho = result.getString("phone");
-					String nam = result.getString("name");
-					String add = result.getString("address");
-
-					System.out.println(id + "  " + pho + " " + nam + "  " + add);
-				}
-
-			} finally {
-				close(result);
-				close(statement);
+				System.out.println(id + "  " + pho + " " + nam + "  " + add);
 			}
 
-		} catch(Throwable oops) {
-			oops.printStackTrace();
+		} catch(Exception ex) {
+			System.out.println("Error Creating Vendor History: " + ex.getMessage());
 		}
 
-		return 0;
-	}
+		return;
+
+	} // execVendorContracts
 
 	/*
 	 * Method: staffRoles
@@ -338,74 +251,53 @@ public class Report {
 	 * Return information on Books-A-Thousand staff grouped by their role.
 	 * 
 	 * Input:
-	 * args[2] = "Salesperson" | "Procurement" | "Warehouse staff" | "Accounting" | "Management"
+	 * @param  jobTitle
+	 * 	Job title of the staff returned
 	 * 
 	 * Output:
 	 * Print report
 	 */
 
-	private int staffRoles(String[] args){
+	public void execRoles(@Param("Job Title") String jobTitle) throws SQLException {
 
-		String s1 = "SELECT * FROM Staff WHERE jobTitle='";
+		String s1 = "SELECT * FROM Staff WHERE jobTitle LIKE '%";
 		// s2 = Staff role
-		String s3 = "'";
+		String s3 = "%'";
 
-		String q = s1+args[2]+s3;
+		String q = s1+jobTitle+s3;
 
 		// Test
 		System.out.println(q);
 
 		try {
+			// Create a statement instance that will be sending
+			// your SQL statements to the DBMS
+			Statement statement = connection.createStatement();
 
-			try {
+			ResultSet result = statement.executeQuery(q);
 
-				// Create a statement instance that will be sending
-				// your SQL statements to the DBMS
-				statement = connection.createStatement();
+			System.out.println(); // skip a line
+			while (result.next()) {
 
-				result = statement.executeQuery(q);
+				int id = result.getInt("id");
+				String nam = result.getString("name");
+				String gen = result.getString("gender");
+				String dat = result.getString("dob");
+				String job = result.getString("jobTitle");
+				String dep = result.getString("department");
+				int sal = result.getInt("salary");
+				String pho = result.getString("phone");
+				String add = result.getString("address");
 
-				System.out.println(); // skip a line
-				while (result.next()) {
-
-					int id = result.getInt("id");
-					String nam = result.getString("name");
-					String gen = result.getString("gender");
-					String dat = result.getString("dob");
-					String job = result.getString("jobTitle");
-					String dep = result.getString("department");
-					int sal = result.getInt("salary");
-					String pho = result.getString("phone");
-					String add = result.getString("address");
-
-					System.out.println(id + "  " + nam + " " + gen + " " + dat + "  " + job + " " + dep + " " + sal + " " + pho + " " + add);
-				}
-
-			} finally {
-				close(result);
-				close(statement);
+				System.out.println(id + "  " + nam + " " + gen + " " + dat + "  " + job + " " + dep + " " + sal + " " + pho + " " + add);
 			}
 
-		} catch(Throwable oops) {
-			oops.printStackTrace();
+		} catch(Exception ex) {
+			System.out.println("Error Creating Vendor History: " + ex.getMessage());
 		}
 
-		return 0;
-	}
+		return;
+		
+	} // execStaffRoles
 
-	static void close(Statement statement) {
-		if(statement != null) {
-			try { 
-				statement.close(); 
-			} catch(Throwable whatever) {}
-		}
-	}
-
-	static void close(ResultSet result) {
-		if(result != null) {
-			try { 
-				result.close(); 
-			} catch(Throwable whatever) {}
-		}
-	}
 }

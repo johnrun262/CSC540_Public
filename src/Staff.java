@@ -354,7 +354,7 @@ public class Staff extends AbstractCommandHandler {
 					"\tTitle: "+jobTitle+
 					"\tDept: "+dept+
 					"\tLocation: "+workLoc+
-					"\tSalary: "+salary
+					"\tSalary: $"+salary
 					);
 			System.out.println();
 		}

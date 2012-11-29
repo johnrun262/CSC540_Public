@@ -189,7 +189,8 @@ public class Purchase extends AbstractCommandHandler {
 	 * 
 	 */
 	public void execPay(	 
-			@Param("id") String purId) throws ValidationException, SQLException {
+			@Param("id") String purId,
+			@Param(value="status", optional=true) String status) throws ValidationException, SQLException {
 
 		int purIDValue;
 		
@@ -207,15 +208,20 @@ public class Purchase extends AbstractCommandHandler {
 		SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
 		String date = formatter.format(todaysDate);
 		
+		// status not supplied then it is paid
+		if (status == null) {
+			status = "paid";
+		}
+		
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", purId);
 		params.put("paidDate", date);
-		params.put("status", "paid");
+		params.put("status", status);
 
 
 		updateRow(ValidationHelpers.TABLE_PURCHASE, "id", purIDValue, params);
 
-		System.out.println("Paid Purchase record with ID " + purId); 
+		System.out.println("Purchase status changed to " + status + " for record with ID " + purId); 
 
 	} // execPay
 

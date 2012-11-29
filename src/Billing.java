@@ -123,62 +123,45 @@ public class Billing extends AbstractCommandHandler{
 	}
 
 
-	public int execVendor(String[] args){
+	public void execVendor(@Param("Vendor Id") String vendorId,
+			@Param(value="Start Date", optional=true) String argStartDate) throws ValidationException, SQLException {
 
-		/*		  if (args.length < 3){
-		    usage();
-		    return -1;
-		  }
+		int vendorIdValue;
 
-		  try {
-		    HashMap<String, String> subs = new HashMap<String, String>();
-		    switch (BillingCmds.valueOf(args[1].toUpperCase())) {
-		    case CUSTOMER:
-		      identifier = Integer.parseInt(args[2]);
-		      fillCustomerInfo(subs);
-		      fillOrdersSection(args, subs);
-		      fillBillTotal(args, subs);
+		// validate input parameters
+		try {
+			// check vendor ID numeric and in database
+			vendorIdValue = ValidationHelpers.checkId(connection, vendorId, ValidationHelpers.TABLE_VENDOR);
+		} catch (ValidationException ex) {
+			System.out.println("Validation Error: " + ex.getMessage());
+			return;
+		}
 
-		      String bill = customerBillTemplate;
-		      // Fill out template with values and print
-		      for (String key : subs.keySet()) {
-		        bill = bill.replaceAll("\\{"+key+"\\}", subs.get(key));
-		      }
+		try {
+			HashMap<String, String> subs = new HashMap<String, String>();
 
-		      System.out.println("====");
-		      System.out.println(bill);
-		      System.out.println("====");
-		      //Maybe optionally write it to file??  We can just pipe standard output to file anyway.
+			// Creating a Vendor Payment
+			fillVendorInfo(vendorIdValue, subs);
+			fillPurchasesSection(vendorIdValue, argStartDate, subs);
+			fillPaymentTotal(vendorIdValue,subs);
 
-		      break;
+			String payment = vendorPaymentTemplate;
 
-		    case VENDOR:
-		      // Creating a Vendor Payment
-		      identifier = Integer.parseInt(args[2]);
-		      fillVendorInfo(subs);
-		      fillPurchasesSection(args,subs);
-		      fillPaymentTotal(args,subs);
+			// Fill out template with values and print
+			for (String key : subs.keySet()) {
+				payment = payment.replaceAll("\\{"+key+"\\}", subs.get(key));
+			}
+			System.out.println("====");
+			System.out.println(payment);
+			System.out.println("====");
 
-	           String payment = vendorPaymentTemplate;
+		} catch (Exception e) {
+			usage();
+			e.printStackTrace();
+			exitProgram("Caught exception \n" + e.getLocalizedMessage());
+		}
 
-	           // Fill out template with values and print
-	           for (String key : subs.keySet()) {
-	             payment = payment.replaceAll("\\{"+key+"\\}", subs.get(key));
-	           }
-	           System.out.println("====");
-	           System.out.println(payment);
-	           System.out.println("====");
-		      break;
-
-		    } // switch
-
-		  } catch (Exception e) {
-		    usage();
-		    e.printStackTrace();
-		    exitProgram("Caught exception \n" + e.getLocalizedMessage());
-		  }*/
-
-		return 0;
+		return;
 
 	}
 
@@ -190,7 +173,8 @@ public class Billing extends AbstractCommandHandler{
 				"SUM(salePrice * quantity) as total FROM Book, ItemOrder " +
 				"WHERE bookId = id " +
 				"AND orderId IN " +
-				"(SELECT DISTINCT id FROM Orders WHERE orderDate > ? AND CustomerId = ? AND status <> 'paid')");    
+				"(SELECT DISTINCT id FROM Orders WHERE orderDate > ? AND CustomerId = ?)");
+		// TODO do I include paid status orders  AND status <> 'paid'
 		totalStmt.setDate(1, new Date(startDate.getTimeInMillis()));
 		totalStmt.setInt(2, id);
 		ResultSet set = totalStmt.executeQuery();
@@ -256,8 +240,9 @@ public class Billing extends AbstractCommandHandler{
 				"SELECT title, author, quantity, salePrice "+
 						"FROM Book, ItemOrder "+
 						" WHERE bookId = id AND orderId IN " +
-						" (SELECT DISTINCT id FROM Orders WHERE orderDate > ? AND CustomerId = ? AND status <> 'paid')");
-
+				" (SELECT DISTINCT id FROM Orders WHERE orderDate > ? AND CustomerId = ?)");
+		// TODO do I include paid status orders  AND status <> 'paid'
+		
 		purchasesStmt.setDate(1, new Date(startDate.getTimeInMillis()));
 		purchasesStmt.setInt(2, id);
 		ResultSet purchases = purchasesStmt.executeQuery();

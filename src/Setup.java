@@ -484,7 +484,7 @@ public class Setup extends AbstractCommandHandler {
 				"6003,"+
 				"'2-june-2012',"+
 				"4003,"+ // ISBN 1236
-				"3001,"+ // Print and Go
+				"3002,"+ // Print and Go
 				"1003,"+ 
 				"6," + // qty
 				"'paid',"+
@@ -534,7 +534,7 @@ public class Setup extends AbstractCommandHandler {
 		sqlArray.add("INSERT INTO ItemOrder VALUES ("+
 				"5001,"+
 				"4001,"+
-				"99,"+
+				"725,"+
 				"3"+
 				")");		
 		
@@ -549,7 +549,7 @@ public class Setup extends AbstractCommandHandler {
 		sqlArray.add("INSERT INTO ItemOrder VALUES ("+
 				"5002,"+
 				"4002,"+
-				"99,"+
+				"650,"+
 				"2"+
 				")");	
 		
@@ -564,7 +564,7 @@ public class Setup extends AbstractCommandHandler {
 		sqlArray.add("INSERT INTO ItemOrder VALUES ("+
 				"5003,"+
 				"4004,"+
-				"99,"+
+				"5,"+
 				"1"+
 				")");
 		
@@ -579,7 +579,7 @@ public class Setup extends AbstractCommandHandler {
 		sqlArray.add("INSERT INTO ItemOrder VALUES ("+
 				"5004,"+
 				"4004,"+
-				"99,"+
+				"5,"+
 				"2"+
 				")");
 		

@@ -382,21 +382,21 @@ public class Setup extends AbstractCommandHandler {
 				"4002,"+
 				"650,"+
 				"10,"+
-				"'ISBN 1234',"+
+				"'ISBN 1235',"+
 				"'Joe Bob'"+
 				")");		
 		sqlArray.add("INSERT INTO Book VALUES ("+
 				"4003,"+
 				"700,"+
 				"6,"+
-				"'ISBN 1234',"+
+				"'ISBN 1236',"+
 				"'Author Fry'"+
 				")");
 		sqlArray.add("INSERT INTO Book VALUES ("+
 				"4004,"+
 				"5,"+
 				"6,"+
-				"'ISBN 1234',"+
+				"'ISBN 1237',"+
 				"'Bill Gates'"+
 				")");		
 		

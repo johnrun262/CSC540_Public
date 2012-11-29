@@ -28,19 +28,20 @@ public class BooksCmd {
 
 	// Put your oracle ID and password here
 	private static final String user = "jlloyd";
-	private static final String password = "xxxx";
+	private static final String password = "XXXX";
 
 	// First Level Commands
 	private static enum Operations {BILLING, BOOK, CUSTOMER, PURCHASE, REPORT, SALE, STAFF, STOCKS, VENDOR};
 
 	public static void main(String[] args) {
 
+		System.out.println();
+		
 		// spit out parameters read
-		System.out.println("Command Received:");
-		for (int i=0;i<args.length;i++){
+/*		for (int i=0;i<args.length;i++){
 			System.out.print(args[i]+" ");
 		}
-		System.out.println();System.out.println();
+		System.out.println();System.out.println();*/
 
 		// We need at least one command
 		if (args.length < 1) {

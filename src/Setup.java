@@ -10,7 +10,8 @@
  * CSC 540
  * Fall 2012
  * 
- * This file creates the databases and populates with the data provided
+ * This file creates the databases and populates 
+ * with the data provided by the TA for the demo
  * 
  */
 
@@ -32,17 +33,14 @@ public class Setup extends AbstractCommandHandler {
 	}
 
 	// Provided Location Values
-	// TODO update validator
 	public static String LOCATION_1 = "Books-a-Thousand-1";
 	public static String LOCATION_2 = "Books-a-Thousand-2";
 
 	// Provided Department Values
-	// TODO update validator
 	public static String DEPT_MANAGEMENT = "Management";
 	public static String DEPT_SALES = "Sales";
 
 	// Provided JobTitle Values
-	// TODO update validator
 	public static String JOB_M01 = "M-Unit-01";
 	public static String JOB_M02 = "M-Unit-02";
 	public static String JOB_S01 = "S-Unit-01";

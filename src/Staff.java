@@ -29,8 +29,6 @@ import java.util.TreeMap;
 
 public class Staff extends AbstractCommandHandler {
 
-	public static String TABLE = "Staff";
-
 	/*
 	 * Contruct a handler for staff objects.
 	 */
@@ -78,9 +76,11 @@ public class Staff extends AbstractCommandHandler {
 			salaryValue = checkSalary(salary);
 			ValidationHelpers.checkDateOfBirth(dob);
 			// The following are enforced by the schema but can also be checked here to give the user a better error message
-			jobTitle = checkTitle(jobTitle);
-			dept = checkDept(dept);
-			workLoc = checkLoc(workLoc);
+			// Decided to remove these and name the check in the schema and then present database generated error message
+			// when there is invalid input
+			//jobTitle = checkTitle(jobTitle);
+			//dept = checkDept(dept);
+			//workLoc = checkLoc(workLoc);
 		} catch (ValidationException ex) {
 			System.out.println("Validation Error: " + ex.getMessage());
 			System.exit(-1);
@@ -97,7 +97,7 @@ public class Staff extends AbstractCommandHandler {
 		params.put("address", address);
 		params.put("workLocation", workLoc);
 
-		int newID = insertRow(TABLE, "id", 1001, params);
+		int newID = insertRow(ValidationHelpers.TABLE_STAFF, "id", 1001, params);
 
 		System.out.println("Inserted Staff with ID " + newID + " into Database"); 
 	}
@@ -108,7 +108,7 @@ public class Staff extends AbstractCommandHandler {
 	public void execAll() throws SQLException {
 
 		// Select all rows in the staff table and sort by ID
-		String sql = "SELECT * FROM " + TABLE + " ORDER BY id";
+		String sql = "SELECT * FROM " + ValidationHelpers.TABLE_STAFF + " ORDER BY id";
 
 		Statement statement = createStatement();
 		int cnt = displayStaff(statement.executeQuery(sql));
@@ -135,7 +135,7 @@ public class Staff extends AbstractCommandHandler {
 			return;
 		}
 
-		int count = deleteRow(TABLE, Integer.parseInt(id));
+		int count = deleteRow(ValidationHelpers.TABLE_STAFF, Integer.parseInt(id));
 
 		System.out.println("Deleted "+ count + " Staff with ID " + id + " from Database"); 
 
@@ -158,7 +158,7 @@ public class Staff extends AbstractCommandHandler {
 		}
 
 		// Select row in the Staff table with ID
-		String sql = "SELECT * FROM " + TABLE + " WHERE id = "+ Integer.parseInt(id);
+		String sql = "SELECT * FROM " + ValidationHelpers.TABLE_STAFF + " WHERE id = "+ Integer.parseInt(id);
 
 		Statement statement = createStatement();
 		int cnt = displayStaff(statement.executeQuery(sql));
@@ -171,7 +171,7 @@ public class Staff extends AbstractCommandHandler {
 	 * Update a Staff with ID with the given values
 	 *
 	 * @param id
-	 *   The staff id. Must be convertable to an integer.
+	 *   The staff id. Must be convertible to an integer.
 	 * @param name
 	 *   The staff's name
 	 * @param phone
@@ -211,9 +211,11 @@ public class Staff extends AbstractCommandHandler {
 			salaryValue = checkSalary(salary);
 			ValidationHelpers.checkDateOfBirth(dob);
 			// The following are enforced by the schema but can also be checked here to give the user a better error message
-			jobTitle = checkTitle(jobTitle);
-			dept = checkDept(dept);
-			workLoc = checkLoc(workLoc);
+			// Decided to remove these and name the check in the schema and then present database generated error message
+			// when there is invalid input
+			//jobTitle = checkTitle(jobTitle);
+			//dept = checkDept(dept);
+			//workLoc = checkLoc(workLoc);
 		} catch (ValidationException ex) {
 			System.out.println("Validation Error: " + ex.getMessage());
 			System.exit(-1);
@@ -230,7 +232,7 @@ public class Staff extends AbstractCommandHandler {
 		params.put("address", address);
 		params.put("workLocation", workLoc);
 
-		updateRow(TABLE, "id", Integer.parseInt(id), params);
+		updateRow(ValidationHelpers.TABLE_STAFF, "id", Integer.parseInt(id), params);
 
 		System.out.println("Updated Staff with ID " + id + " in Database"); 
 
@@ -354,6 +356,7 @@ public class Staff extends AbstractCommandHandler {
 					"\tLocation: "+workLoc+
 					"\tSalary: "+salary
 					);
+			System.out.println();
 		}
 		return cnt;
 

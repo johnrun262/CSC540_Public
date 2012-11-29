@@ -28,8 +28,6 @@ import java.util.Map;
 
 public class Customer extends AbstractCommandHandler {
 
-	public static String TABLE = "Customer";
-
 	/*
 	 * Contruct a handler for Customer objects.
 	 */
@@ -63,7 +61,6 @@ public class Customer extends AbstractCommandHandler {
 
 		// pseudo optional params (not nullable in database)
 		if (ssn == null) ssn = "999-99-9999";
-		System.out.println("address=" + address);
 
 		// validate input parameters
 		try {
@@ -86,7 +83,7 @@ public class Customer extends AbstractCommandHandler {
 		params.put("ssn", ssn);
 		params.put("status", "active");
 
-		int newID = insertRow(TABLE, "id", 2001, params);
+		int newID = insertRow(ValidationHelpers.TABLE_CUSTOMER, "id", 2001, params);
 
 		System.out.println("Inserted Customer with ID " + newID + " into Database"); 
 
@@ -98,7 +95,7 @@ public class Customer extends AbstractCommandHandler {
 	public void execAll() throws SQLException {
 
 		// Select all rows in the Customer table and sort by ID
-		String sql = "SELECT * FROM " + TABLE + " ORDER BY id";
+		String sql = "SELECT * FROM " + ValidationHelpers.TABLE_CUSTOMER + " ORDER BY id";
 
 		Statement statement = createStatement();
 		int cnt = displayCustomers(statement.executeQuery(sql));
@@ -117,14 +114,14 @@ public class Customer extends AbstractCommandHandler {
 
 		// Validate the ID
 		try {
-			ValidationHelpers.checkId(connection, id, TABLE);
+			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_CUSTOMER);
 			ValidationHelpers.checkIdNotForeign(connection, id, "Orders", "customerId");
 		} catch (ValidationException ex) {
 			System.out.println("Validation Error: " + ex.getMessage());
 			return;
 		}
 
-		int count = deleteRow(TABLE, Integer.parseInt(id));
+		int count = deleteRow(ValidationHelpers.TABLE_CUSTOMER, Integer.parseInt(id));
 
 		System.out.println("Deleted "+ count + " Customer with ID " + id + " from Database"); 
 
@@ -147,7 +144,7 @@ public class Customer extends AbstractCommandHandler {
 
 		// Validate the ID - if ID validation fails try to match on phone
 		try {
-			ValidationHelpers.checkId(connection, id, TABLE);
+			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_CUSTOMER);
 		} catch (ValidationException ex) {
 			// try to match on phone
 			matchPhone = true;
@@ -156,10 +153,10 @@ public class Customer extends AbstractCommandHandler {
 		}
 
 		if (matchPhone) {
-			sql = "SELECT * FROM " + TABLE + " WHERE phone LIKE '%"+id+"%'";
+			sql = "SELECT * FROM " + ValidationHelpers.TABLE_CUSTOMER + " WHERE phone LIKE '%"+id+"%' ORDER BY name";
 		} else {
 			// Select row in the Customer table with ID
-			sql = "SELECT * FROM " + TABLE + " WHERE id = "+ Integer.parseInt(id);
+			sql = "SELECT * FROM " + ValidationHelpers.TABLE_CUSTOMER + " WHERE id = "+ Integer.parseInt(id);
 		}
 
 		Statement statement = createStatement();
@@ -202,7 +199,8 @@ public class Customer extends AbstractCommandHandler {
 			@Param("address") String address,
 			@Param(value="phone", optional=true) String phone, 
 			@Param(value="dob", optional=true) String dob, 
-			@Param(value="gender", optional=true) String gender, 
+			@Param(value="gender", optional=true) String gender,
+			@Param(value="status", optional=true) String status, 
 			@Param(value="ssn", optional=true) String ssn) throws SQLException {
 
 		// pseudo optional params (not nullable in database)
@@ -212,11 +210,11 @@ public class Customer extends AbstractCommandHandler {
 
 		// validate input parameters
 		try {
-			ValidationHelpers.checkId(connection, id, TABLE);
+			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_CUSTOMER);
 
 			if (gender != null) gender = ValidationHelpers.checkGender(gender);
 			if (dob != null) ValidationHelpers.checkDateOfBirth(dob);
-
+			status = checkStatus(status);
 			// TODO schema has max phone length at 12 - this may noy be big enough (i.e. "(919) 123-1234" is 14)
 
 		} catch (ValidationException ex) {
@@ -226,17 +224,38 @@ public class Customer extends AbstractCommandHandler {
 
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("name", name);
-		params.put("phone", phone);
 		params.put("address", address);
-		params.put("dob", dob);
-		params.put("gender", gender);
-		params.put("ssn", ssn);
-		params.put("status", "active");
 
-		updateRow(TABLE, "id", Integer.parseInt(id), params);
+		// don't set optional parameters if not supplied
+		if (phone != null)	params.put("phone", phone);
+		if (dob != null)	params.put("dob", dob);
+		if (gender != null)	params.put("gender", gender);
+		if (ssn != null)	params.put("ssn", ssn);
+		if (status != null) params.put("status", status);
+
+		// do the update
+		updateRow(ValidationHelpers.TABLE_CUSTOMER, "id", Integer.parseInt(id), params);
 
 		System.out.println("Updated Customer with ID " + id + " in Database"); 
 
+	}
+
+	private static final String ACTIVE = "active";
+	private static final String INACTIVE = "inactive";
+	/*
+	 * Check the status value is valid
+	 */
+	private String checkStatus(String status) throws ValidationException {
+
+		if (status != null) {
+			status = status.toLowerCase();
+
+			if (!status.equals(ACTIVE) && !status.equals(INACTIVE)) {
+				throw new ValidationException("Status must be "+ACTIVE+" or "+INACTIVE);
+			}
+		}
+
+		return status;
 	}
 
 	/**

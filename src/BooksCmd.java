@@ -16,6 +16,7 @@
  * 
  */
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
@@ -27,9 +28,9 @@ public class BooksCmd {
 
 	// Put your oracle ID and password here
 	private static final String user = "jlloyd";
-	private static final String password = "XXXX";
+	private static final String password = "xxxx";
 
-
+	// First Level Commands
 	private static enum Operations {BILLING, BOOK, CUSTOMER, PURCHASE, REPORT, SALE, STAFF, STOCKS, VENDOR};
 
 	public static void main(String[] args) {
@@ -64,12 +65,13 @@ public class BooksCmd {
 				System.exit(-1);
 			}
 
-			if (invokeViaReflection(connection, args)) {
-				return;
-			}
+			// execute command via command handler
+			invokeViaReflection(connection, args);
 
 			// switch on the command type and then create a member of 
 			// that class to handle the request.
+			// catches commands that need processing not done by
+			// the command handler
 			switch (Operations.valueOf(args[0].toUpperCase())) {
 
 			case BILLING:
@@ -94,9 +96,15 @@ public class BooksCmd {
 
 		} catch (IllegalArgumentException e) {
 			usage();
+
+		} catch (InvocationTargetException ex) {
+			// problem while executing command
+			System.out.println("Exception Processing Command: " + ex.getCause());
+
 		} catch(Throwable oops) {
 			// print a stack trace if something goes wrong
 			oops.printStackTrace();
+
 		} finally {
 			// always close the connection to the database
 			close(connection);

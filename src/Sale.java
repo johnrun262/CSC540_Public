@@ -20,12 +20,10 @@ import java.sql.Statement;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 
 
@@ -80,19 +78,8 @@ public class Sale extends AbstractCommandHandler {
 
 		// Display order-level info.
 		Statement statement = createStatement();
-		int cnt = displayOrders(statement.executeQuery(sql));
+		displayOrders(statement.executeQuery(sql));
 
-		// If an order was found, display the line items
-		if (cnt > 0) {
-			System.out.println("Items ordered:");
-			sql = "SELECT b.title AS bookTitle, b.id AS bookID, b.retailPrice, oi.salePrice, oi.quantity" +
-					" FROM " + ValidationHelpers.TABLE_ITEMORDER + " oi " +
-					" INNER JOIN " + ValidationHelpers.TABLE_BOOK + " b ON oi.bookId=b.id " +
-					" WHERE oi.orderId=" + orderId;
-
-			statement = createStatement();
-			displayOrderItems(statement.executeQuery(sql));
-		}
 	}
 
 	/**
@@ -303,7 +290,7 @@ public class Sale extends AbstractCommandHandler {
 			System.out.println("Invalid Numeric Input");
 			return;			
 		}
-		
+
 		try {
 			// Mark order shipped
 			String sql = "UPDATE " + ValidationHelpers.TABLE_ORDERS + " SET status=? WHERE id=?";
@@ -369,9 +356,46 @@ public class Sale extends AbstractCommandHandler {
 
 	}
 
+	/**
+	 * Execute the command to mark receipt of payment
+	 * 
+	 * @param id
+	 *   The id of the order record we are updating
+	 * 
+	 */
+	public void execPaid(	 
+			@Param("order id") String purId) throws ValidationException, SQLException {
+
+		int orderIDValue;
+		
+		// validate input parameters
+		try {
+			// check the purchase record id is numeric and in database
+			orderIDValue = ValidationHelpers.checkId(connection, purId, ValidationHelpers.TABLE_ORDERS);
+		} catch (ValidationException ex) {
+			System.out.println("Validation Error: " + ex.getMessage());
+			return;
+		}
+
+		// set paid date to today
+		Date todaysDate = new java.util.Date();
+		SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
+		String date = formatter.format(todaysDate);
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("id", purId);
+		params.put("paidDate", date);
+		params.put("status", "paid");
+
+
+		updateRow(ValidationHelpers.TABLE_ORDERS, "id", orderIDValue, params);
+
+		System.out.println("Order marked paid record with ID " + purId); 
+
+	} // execPaid
 
 	private String getOrderSql(String whereClause) {
-		String sql = "SELECT o.id, s.id AS staffId, s.name AS staffName, c.id AS customerID, c.name AS customerName, o.status, o.orderDate " +
+		String sql = "SELECT o.id, s.id AS staffId, s.name AS staffName, c.id AS customerID, c.name AS customerName, o.status, o.orderDate, o.paidDate " +
 				" FROM " + ValidationHelpers.TABLE_ORDERS + " o " +
 				" INNER JOIN " + ValidationHelpers.TABLE_STAFF + " s ON o.staffId=s.id " +
 				" INNER JOIN " + ValidationHelpers.TABLE_CUSTOMER + " c ON o.customerId=c.id ";
@@ -396,14 +420,28 @@ public class Sale extends AbstractCommandHandler {
 			int customerId = result.getInt("customerID");
 			String status = result.getString("status");
 			Date orderDate = result.getDate("orderDate");
+			Date paidDate = result.getDate("paidDate");
 			System.out.println(
 					cnt+
 					"\tID: "+id+
 					"\tStaff: "+staff+"("+staffId+")"+
 					"\tCustomer: "+customer+"("+customerId+")"+
 					"\tStatus: "+status+
-					"\tDate: "+orderDate
+					"\tOrder Date: "+orderDate+
+					"\tPaid Date: "+paidDate
 					);
+			System.out.println();
+
+			// display the line items for the order
+			System.out.println("Items ordered:");
+			String sql = "SELECT b.title AS bookTitle, b.id AS bookID, b.retailPrice, oi.salePrice, oi.quantity" +
+					" FROM " + ValidationHelpers.TABLE_ITEMORDER + " oi " +
+					" INNER JOIN " + ValidationHelpers.TABLE_BOOK + " b ON oi.bookId=b.id " +
+					" WHERE oi.orderId=" + id;
+
+			Statement statement = createStatement();
+			displayOrderItems(statement.executeQuery(sql));
+
 		}
 		return cnt;
 
@@ -426,15 +464,20 @@ public class Sale extends AbstractCommandHandler {
 			int qty = result.getInt("quantity");
 			System.out.println(
 					"\tBook: "+book+"("+bookId+")"+
-					"\tRetail: $"+new DecimalFormat("0.00").format(retail)+
-					"\tSale: $"+new DecimalFormat("0.00").format(sale)+
-					"\tQty: "+qty+
-					"\tSub-Total: $"+new DecimalFormat("0.00").format(sale*qty)
+							"\tRetail: $"+new DecimalFormat("0.00").format(retail)+
+							"\tSale: $"+new DecimalFormat("0.00").format(sale)+
+							"\tQty: "+qty+
+							"\tSub-Total: $"+new DecimalFormat("0.00").format(sale*qty)
 					);
+			System.out.println();
+
 			grandTotal += (sale*qty);
 		}
+		
 		System.out.println();
 		System.out.println("ORDER TOTAL $" + new DecimalFormat("0.00").format(grandTotal));
+		System.out.println();
+
 		return cnt;
 
 	}

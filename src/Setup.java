@@ -121,8 +121,9 @@ public class Setup extends AbstractCommandHandler {
 				"id INTEGER PRIMARY KEY NOT NULL,"+ 
 				"staffId INTEGER NOT NULL,"+ 
 				"customerId INTEGER NOT NULL,"+ 
-				"status CHAR(8) CHECK (status IN ('ordered', 'received', 'shipped')),"+ 
-				"orderDate DATE NOT NULL,"+ 
+				"status CHAR(8) CHECK (status IN ('ordered', 'received', 'shipped', 'paid')),"+ 
+				"orderDate DATE NOT NULL,"+
+				"paidDate DATE,"+ 
 				"FOREIGN KEY (staffId) REFERENCES Staff(id),"+
 				"FOREIGN KEY (customerId) REFERENCES Customer(id) "+
 				")");
@@ -206,6 +207,7 @@ public class Setup extends AbstractCommandHandler {
 		execPopB(); // populate books
 		execPopV(); // populate vendors
 		execPopP(); // populate purchases
+		execPopO(); // populate orders
 
 	}
 
@@ -316,7 +318,7 @@ public class Setup extends AbstractCommandHandler {
 				"'active',"+
 				"'201-123-5321',"+
 				"'392-82-1942',"+
-				"'Mr. C First',"+
+				"'Bob',"+
 				"'101 Russet St'"+
 				")");
 		sqlArray.add("INSERT INTO Customer VALUES ("+
@@ -326,7 +328,7 @@ public class Setup extends AbstractCommandHandler {
 				"'active',"+
 				"'102-394-6492',"+
 				"'292-81-8782',"+
-				"'Mrs. C Second',"+
+				"'Susie',"+
 				"'102 Golden Ln'"+
 				")");
 		sqlArray.add("INSERT INTO Customer VALUES ("+
@@ -336,7 +338,7 @@ public class Setup extends AbstractCommandHandler {
 				"'active',"+
 				"'908-483-2853',"+
 				"'122-02-1342',"+
-				"'Mr. C Third',"+
+				"'Beavis',"+
 				"'103 Sweet Ct'"+
 				")");
 		sqlArray.add("INSERT INTO Customer VALUES ("+
@@ -346,7 +348,7 @@ public class Setup extends AbstractCommandHandler {
 				"'active',"+
 				"'166-983-2837',"+
 				"'735-82-1232',"+
-				"'Mr. C Forth',"+
+				"'Bill',"+
 				"'104 Mashed Rd'"+
 				")");
 
@@ -513,4 +515,85 @@ public class Setup extends AbstractCommandHandler {
 		}
 
 	}
+	
+	/**
+	 * Execute the commands to populate orders and itemorders tables
+	 * 
+	 */
+	public void execPopO() throws SQLException {
+		ArrayList<String> sqlArray = new ArrayList<String>();
+
+		sqlArray.add("INSERT INTO Orders VALUES ("+
+				"5001,"+
+				"1003,"+
+				"2001,"+
+				"'paid',"+
+				"'12-apr-2012',"+
+				"'21-apr-2012'"+
+				")");
+		sqlArray.add("INSERT INTO ItemOrder VALUES ("+
+				"5001,"+
+				"4001,"+
+				"99,"+
+				"3"+
+				")");		
+		
+		sqlArray.add("INSERT INTO Orders VALUES ("+
+				"5002,"+
+				"1003,"+
+				"2002,"+
+				"'paid',"+
+				"'17-apr-2012',"+
+				"'28-apr-2012'"+
+				")");
+		sqlArray.add("INSERT INTO ItemOrder VALUES ("+
+				"5002,"+
+				"4002,"+
+				"99,"+
+				"2"+
+				")");	
+		
+		sqlArray.add("INSERT INTO Orders VALUES ("+
+				"5003,"+
+				"1003,"+
+				"2003,"+
+				"'paid',"+
+				"'9-mar-2012',"+
+				"'23-mar-2012'"+
+				")");
+		sqlArray.add("INSERT INTO ItemOrder VALUES ("+
+				"5003,"+
+				"4004,"+
+				"99,"+
+				"1"+
+				")");
+		
+		sqlArray.add("INSERT INTO Orders VALUES ("+
+				"5004,"+
+				"1003,"+
+				"2004,"+
+				"'paid',"+
+				"'24-aug-2012',"+
+				"'18-sep-2012'"+
+				")");
+		sqlArray.add("INSERT INTO ItemOrder VALUES ("+
+				"5004,"+
+				"4004,"+
+				"99,"+
+				"2"+
+				")");
+		
+		for (String sql : sqlArray) {
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			System.out.println(sql);
+			try {
+				statement.executeUpdate(sql);
+			} catch (Exception e) {
+				System.out.println(e.getMessage());
+			}
+		}
+
+	}
+	
 }

@@ -25,8 +25,6 @@ import java.util.Map;
 
 public class Book extends AbstractCommandHandler {
 
-	public static String TABLE = "Book";
-
 	/*
 	 * Contruct a handler for book objects.
 	 */
@@ -62,7 +60,7 @@ public class Book extends AbstractCommandHandler {
 		params.put("author", author);
 		params.put("retailPrice", Double.parseDouble(retailPrice));
 
-		int newID = insertRow(TABLE, "id", 4001, params);
+		int newID = insertRow(ValidationHelpers.TABLE_BOOK, "id", 4001, params);
 
 		System.out.println("Inserted Book with ID " + newID + " into Database"); 
 
@@ -74,7 +72,7 @@ public class Book extends AbstractCommandHandler {
 	public void execAll() throws SQLException {
 
 		// Select all rows in the book table and sort by ID
-		String sql = "SELECT * FROM " + TABLE + " ORDER BY id";
+		String sql = "SELECT * FROM " + ValidationHelpers.TABLE_BOOK + " ORDER BY id";
 
 		Statement statement = createStatement();
 		int cnt = displayBooks(statement.executeQuery(sql));
@@ -93,7 +91,7 @@ public class Book extends AbstractCommandHandler {
 
 		// validate Book ID parameter
 		try {
-			ValidationHelpers.checkId(connection, id, TABLE);
+			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_BOOK);
 			ValidationHelpers.checkIdNotForeign(connection, id, "Purchase", "bookId");
 			ValidationHelpers.checkIdNotForeign(connection, id, "ItemOrder", "bookId");
 			ValidationHelpers.checkIdNotForeign(connection, id, "Stocks", "bookId");
@@ -102,7 +100,7 @@ public class Book extends AbstractCommandHandler {
 			return;
 		}
 
-		int count = deleteRow(TABLE, Integer.parseInt(id));
+		int count = deleteRow(ValidationHelpers.TABLE_BOOK, Integer.parseInt(id));
 
 		System.out.println("Deleted "+ count + " Book with ID " + id + " from Database"); 
 
@@ -118,14 +116,14 @@ public class Book extends AbstractCommandHandler {
 
 		// validate Book ID parameter
 		try {
-			ValidationHelpers.checkId(connection, id, TABLE);
+			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_BOOK);
 		} catch (ValidationException ex) {
 			System.out.println("Validation Error: " + ex.getMessage());
 			return;
 		}
 
 		// Select row in the Book table with ID
-		String sql = "SELECT * FROM " + TABLE + " WHERE id = "+ Integer.parseInt(id);
+		String sql = "SELECT * FROM " + ValidationHelpers.TABLE_BOOK + " WHERE id = "+ Integer.parseInt(id);
 
 		Statement statement = createStatement();
 		int cnt = displayBooks(statement.executeQuery(sql));
@@ -157,7 +155,7 @@ public class Book extends AbstractCommandHandler {
 
 		// validate Book parameters
 		try {
-			ValidationHelpers.checkId(connection, id, TABLE);
+			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_BOOK);
 			checkPrice(retailPrice);
 			checkQty(quantity);
 		} catch (ValidationException ex) {
@@ -171,7 +169,7 @@ public class Book extends AbstractCommandHandler {
 		params.put("retailPrice", Double.parseDouble(retailPrice));
 		params.put("stockQuantity", Integer.parseInt(quantity));
 
-		updateRow(TABLE, "id", Integer.parseInt(id), params);
+		updateRow(ValidationHelpers.TABLE_BOOK, "id", Integer.parseInt(id), params);
 
 		System.out.println("Updated Book with ID " + id + " in Database"); 
 	}

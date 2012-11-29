@@ -111,7 +111,13 @@ public class Purchase extends AbstractCommandHandler {
 	public void execAll() throws SQLException {
 
 		// Select all rows in the staff table and sort by ID
-		String sql = "SELECT * FROM " + ValidationHelpers.TABLE_PURCHASE + " ORDER BY id";
+		String sql = "SELECT * "+
+				" FROM " + ValidationHelpers.TABLE_PURCHASE + 
+				", " + ValidationHelpers.TABLE_BOOK + 
+				", " + ValidationHelpers.TABLE_VENDOR + 
+				" WHERE "+ ValidationHelpers.TABLE_PURCHASE+".bookId = " + ValidationHelpers.TABLE_BOOK +".id"+
+				" AND " + ValidationHelpers.TABLE_PURCHASE+".vendorId = " + ValidationHelpers.TABLE_VENDOR +".id" + 
+				" ORDER BY "+ValidationHelpers.TABLE_PURCHASE+".id";
 
 		Statement statement = createStatement();
 		int cnt = displayPurchase(statement.executeQuery(sql));
@@ -160,7 +166,13 @@ public class Purchase extends AbstractCommandHandler {
 		}
 
 		// Select row in the Staff table with ID
-		String sql = "SELECT * FROM " + ValidationHelpers.TABLE_PURCHASE + " WHERE id = "+ Integer.parseInt(id);
+		String sql = "SELECT * "+
+				" FROM " + ValidationHelpers.TABLE_PURCHASE + 
+				", " + ValidationHelpers.TABLE_BOOK + 
+				", " + ValidationHelpers.TABLE_VENDOR + 
+				" WHERE "+ ValidationHelpers.TABLE_PURCHASE+".id = "+ Integer.parseInt(id) + 
+				" AND " + ValidationHelpers.TABLE_PURCHASE+".bookId = " + ValidationHelpers.TABLE_BOOK +".id"+
+				" AND " + ValidationHelpers.TABLE_PURCHASE+".vendorId = " + ValidationHelpers.TABLE_VENDOR +".id";;
 
 		Statement statement = createStatement();
 		int cnt = displayPurchase(statement.executeQuery(sql));
@@ -168,6 +180,44 @@ public class Purchase extends AbstractCommandHandler {
 		System.out.println(cnt+" Row(s) Returned");
 
 	}
+
+	/**
+	 * Execute the command to pay for a purchase.
+	 * 
+	 * @param id
+	 *   The id of the purchase record we are updating
+	 * 
+	 */
+	public void execPay(	 
+			@Param("id") String purId) throws ValidationException, SQLException {
+
+		int purIDValue;
+		
+		// validate input parameters
+		try {
+			// check the purchase record id is numeric and in database
+			purIDValue = ValidationHelpers.checkId(connection, purId, ValidationHelpers.TABLE_PURCHASE);
+		} catch (ValidationException ex) {
+			System.out.println("Validation Error: " + ex.getMessage());
+			return;
+		}
+
+		// set paid date to today
+		Date todaysDate = new java.util.Date();
+		SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
+		String date = formatter.format(todaysDate);
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("id", purId);
+		params.put("paidDate", date);
+		params.put("status", "paid");
+
+
+		updateRow(ValidationHelpers.TABLE_PURCHASE, "id", purIDValue, params);
+
+		System.out.println("Paid Purchase record with ID " + purId); 
+
+	} // execPay
 
 	/**
 	 * Execute the command to update a purchase record.
@@ -189,7 +239,6 @@ public class Purchase extends AbstractCommandHandler {
 	 * @param status
 	 *   The status of the order (ordered, received, shipped)
 	 */
-	// TODO this needs testing!
 	public void execUpdate(	 
 			@Param("id") String purId,
 			@Param("bookId") String bookId, 
@@ -306,24 +355,24 @@ public class Purchase extends AbstractCommandHandler {
 			statement = connection.createStatement();
 			statement.setQueryTimeout(10);
 			int cnt = statement.executeUpdate(sql);
-			
+
 			if (cnt == 0) {
 				// should not happen
 				throw new ValidationException("Warning no books updated with ID " + bookId);
 			}
-			
+
 			// Change status to "received"
 			sql = "UPDATE "+ValidationHelpers.TABLE_PURCHASE+" SET status = '"+ Purchase.STATUS_RECEIVED + "' Where Id="+ purId;
 
 			statement = connection.createStatement();
 			statement.setQueryTimeout(10);
 			cnt = statement.executeUpdate(sql);
-			
+
 			if (cnt == 0) {
 				// should not happen
 				throw new ValidationException("Warning no purchases updated with ID " + purId);
 			}
-			
+
 			// Commit the transaction
 			connection.commit();
 			System.out.println("Received Purchase " + purId + " and Quantity increased by " + quantity + " for Book Id "+ bookId);
@@ -401,15 +450,27 @@ public class Purchase extends AbstractCommandHandler {
 		while (result.next()) {
 			cnt++;
 			int purId = result.getInt("id");
-			Date date = result.getDate("orderDate");
+			Date orderDate = result.getDate("orderDate");
 			int bookId = result.getInt("bookId");
+			String title = result.getString("title");
 			int vendorId = result.getInt("vendorId");
+			String name = result.getString("name");
 			int staffId = result.getInt("staffId");
 			int qty = result.getInt("quantity");
 			String status = result.getString("status");
 			int price = result.getInt("wholesalePrice");
+			Date paidDate = result.getDate("paidDate");
 
-			System.out.println(cnt+"\tID: "+purId+"\tDate: "+date+"\tBook ID: "+bookId+"\tVendor ID: "+vendorId+"\tStaff ID: "+staffId+"\tQty: "+qty+"\tStatus: "+status+"\tWholesale Price: "+price);
+			System.out.println(cnt+"\tID: "+purId+
+					"\tOrder Date: "+orderDate+
+					"\tBook : "+title+"("+bookId+")"+
+					"\tVendor : "+name+"("+vendorId+")"+
+					"\tStaff ID: "+staffId+
+					"\tQty: "+qty+
+					"\tStatus: "+status+
+					"\tWholesale Price: "+price+
+					"\tPaid Date: "+paidDate);
+			System.out.println();
 		}
 
 		return cnt;

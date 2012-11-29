@@ -141,8 +141,9 @@ public class Setup extends AbstractCommandHandler {
 				"vendorId INTEGER NOT NULL,"+ 
 				"staffId INTEGER NOT NULL,"+ 
 				"quantity INTEGER CHECK (quantity >= 1),"+ 
-				"status CHAR(8) CHECK (status IN ('ordered', 'received', 'shipped')),"+ 
+				"status CHAR(8) CHECK (status IN ('ordered', 'received', 'shipped', 'paid')),"+ 
 				"wholesalePrice INTEGER CHECK (wholesalePrice >= 0),"+ 
+				"paidDate DATE,"+ 
 				"FOREIGN KEY (bookId) REFERENCES Book(id) ,"+ 
 				"FOREIGN KEY (vendorId) REFERENCES Vendor(id),"+ 
 				"FOREIGN KEY (staffId) REFERENCES Staff(id) "+
@@ -372,34 +373,30 @@ public class Setup extends AbstractCommandHandler {
 
 		sqlArray.add("INSERT INTO Book VALUES ("+
 				"4001,"+
-				// TODO ISBN 1234
 				"725,"+
 				"7,"+
-				"'Title 1',"+
+				"'ISBN 1234',"+
 				"'Robert Hooke'"+
 				")");
 		sqlArray.add("INSERT INTO Book VALUES ("+
 				"4002,"+
-				// TODO ISBN 1234
 				"650,"+
 				"10,"+
-				"'Title 2',"+
+				"'ISBN 1234',"+
 				"'Joe Bob'"+
 				")");		
 		sqlArray.add("INSERT INTO Book VALUES ("+
 				"4003,"+
-				// TODO ISBN 1234
 				"700,"+
 				"6,"+
-				"'Title 3',"+
+				"'ISBN 1234',"+
 				"'Author Fry'"+
 				")");
 		sqlArray.add("INSERT INTO Book VALUES ("+
 				"4004,"+
-				// TODO ISBN 1234
 				"5,"+
 				"6,"+
-				"'Title 4',"+
+				"'ISBN 1234',"+
 				"'Bill Gates'"+
 				")");		
 		
@@ -466,9 +463,9 @@ public class Setup extends AbstractCommandHandler {
 				"3001,"+ // Turners
 				"1003,"+ 
 				"10," + // qty
-				"'ordered',"+
-				"301" + // wholesale
-				// TODO date paid 26-feb-2012
+				"'paid',"+
+				"301," + // wholesale
+				"'26-feb-2012'"+
 				")");
 		sqlArray.add("INSERT INTO Purchase VALUES ("+
 				"6002,"+
@@ -477,9 +474,9 @@ public class Setup extends AbstractCommandHandler {
 				"3002,"+ // Print and Go
 				"1003,"+ 
 				"12," + // qty
-				"'ordered',"+
-				"302" + // wholesale
-				// TODO date paid 17-arp-2012
+				"'paid',"+
+				"302," + // wholesale
+				"'17-apr-2012'"+
 				")");
 		sqlArray.add("INSERT INTO Purchase VALUES ("+
 				"6003,"+
@@ -488,9 +485,9 @@ public class Setup extends AbstractCommandHandler {
 				"3001,"+ // Print and Go
 				"1003,"+ 
 				"6," + // qty
-				"'ordered',"+
-				"303" + // wholesale
-				// TODO date paid 26-feb-2012
+				"'paid',"+
+				"303," + // wholesale
+				"'26-feb-2012'"+
 				")");
 		sqlArray.add("INSERT INTO Purchase VALUES ("+
 				"6004,"+
@@ -499,9 +496,9 @@ public class Setup extends AbstractCommandHandler {
 				"3001,"+ // Turners
 				"1003,"+ 
 				"9," + // qty
-				"'ordered',"+
-				"304" + // wholesale
-				// TODO date paid 5-feb-2012
+				"'paid',"+
+				"304," + // wholesale
+				"'5-feb-2012'"+
 				")");
 		
 		for (String sql : sqlArray) {

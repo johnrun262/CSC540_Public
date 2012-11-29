@@ -75,10 +75,13 @@ public class ValidationHelpers {
 	 * @ param Table
 	 *   The table that the id should exist in
 	 *   
+	 *   Returns the integer value of the id
 	 */
-	public static void checkId(Connection connection, String Id, String Table) throws ValidationException {
+	public static int checkId(Connection connection, String Id, String Table) throws ValidationException {
+		int IdValue;
+		
 		try {
-			int IdValue = Integer.parseInt(Id);
+			IdValue = Integer.parseInt(Id);
 			if (IdValue <= 0) {
 				throw new ValidationException(Table + " Id must be a positive integer: "+Id);
 			}
@@ -102,7 +105,7 @@ public class ValidationHelpers {
 				throw new ValidationException(Table+" Id must be in database: "+ Id);
 			}
 
-			return;
+			return IdValue;
 
 		} catch (Exception e) {
 			throw new ValidationException("Exception Validating "+Table+" Id: " + e.getMessage());

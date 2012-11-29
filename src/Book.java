@@ -56,7 +56,7 @@ public class Book extends AbstractCommandHandler {
 			System.out.println("Validation Error: " + ex.getMessage());
 			return;
 		}
-		
+
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("title", title);
 		params.put("author", author);
@@ -238,6 +238,8 @@ public class Book extends AbstractCommandHandler {
 					"\tPrice: $"+new DecimalFormat("0.00").format(retailPrice)+
 					"\tQty: "+stockQuantity
 					);
+			System.out.println();
+
 		}
 		return cnt;
 

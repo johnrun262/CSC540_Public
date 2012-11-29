@@ -276,6 +276,7 @@ public class Customer extends AbstractCommandHandler {
 			String ssn = result.getString("ssn");
 			String status = result.getString("status");
 			System.out.println(cnt+"\tID: "+id+"\tName: "+name+"\tPhone: "+nullSafe(phone)+"\tAddress: "+nullSafe(address)+"\tDOB: "+nullSafe(dob)+"\tGender: "+nullSafe(gender)+"\tSSN: "+nullSafe(ssn)+"\tStatus: "+status);
+			System.out.println();
 		}
 		return cnt;
 

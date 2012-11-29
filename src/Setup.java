@@ -205,6 +205,7 @@ public class Setup extends AbstractCommandHandler {
 		execPopC(); // populate customers
 		execPopB(); // populate books
 		execPopV(); // populate vendors
+		execPopP(); // populate purchases
 
 	}
 
@@ -223,10 +224,9 @@ public class Setup extends AbstractCommandHandler {
 				"'"+JOB_M01+"',"+
 				"'"+DEPT_MANAGEMENT+"',"+
 				"43000,"+
-				"'000-00-0001',"+
+				"'430-324-0943',"+
 				"'132 Red Street',"+
 				"'"+LOCATION_1+"' "+
-				// TODO phone 430-324-0943
 				")");
 		sqlArray.add("INSERT INTO Staff VALUES ("+
 				"1002,"+
@@ -236,10 +236,9 @@ public class Setup extends AbstractCommandHandler {
 				"'"+JOB_M02+"',"+
 				"'"+DEPT_MANAGEMENT+"',"+
 				"40000,"+
-				"'000-00-0002',"+
+				"'324-192-8765',"+
 				"'111 Rose Dr',"+
 				"'"+LOCATION_1+"' "+
-				// TODO phone 324-192-8765
 				")");
 
 		sqlArray.add("INSERT INTO Staff VALUES ("+
@@ -250,10 +249,9 @@ public class Setup extends AbstractCommandHandler {
 				"'"+JOB_S01+"',"+
 				"'"+DEPT_SALES+"',"+
 				"30000,"+
-				"'000-00-0003',"+
+				"'129-430-3784',"+
 				"'54 Purple Rd',"+
 				"'"+LOCATION_1+"' "+
-				// TODO phone 129-430-3784
 				")");
 		sqlArray.add("INSERT INTO Staff VALUES ("+
 				"1004,"+
@@ -263,10 +261,9 @@ public class Setup extends AbstractCommandHandler {
 				"'"+JOB_M01+"',"+
 				"'"+DEPT_MANAGEMENT+"',"+
 				"42000,"+
-				"'000-00-0004',"+
+				"'774-398-3421',"+
 				"'98 Jester Ct',"+
 				"'"+LOCATION_2+"' "+
-				// TODO phone 774-398-3421
 				")");
 		sqlArray.add("INSERT INTO Staff VALUES ("+
 				"1005,"+
@@ -276,10 +273,9 @@ public class Setup extends AbstractCommandHandler {
 				"'"+JOB_S01+"',"+
 				"'"+DEPT_SALES+"',"+
 				"29000,"+
-				"'000-00-0005',"+
+				"'102-394-3243',"+
 				"'34 Pinewood st',"+
 				"'"+LOCATION_2+"' "+
-				// TODO phone 102-394-3243
 				")");
 		sqlArray.add("INSERT INTO Staff VALUES ("+
 				"1006,"+
@@ -289,10 +285,9 @@ public class Setup extends AbstractCommandHandler {
 				"'"+JOB_S02+"',"+
 				"'"+DEPT_SALES+"',"+
 				"25000,"+
-				"'000-00-0006',"+
+				"'888-321-5843',"+
 				"'13 Oakland lane',"+
 				"'"+LOCATION_2+"' "+
-				// TODO phone 888-321-5843
 				")");
 
 		for (String sql : sqlArray) {
@@ -434,7 +429,7 @@ public class Setup extends AbstractCommandHandler {
 				"'505-435-1029',"+
 				"'Turners Inc.',"+
 				"'34 Page St'"+
-				// TODO End Date
+				// TODO End Date 20-sep-2012
 				")");
 
 		sqlArray.add("INSERT INTO Vendor VALUES ("+
@@ -442,7 +437,7 @@ public class Setup extends AbstractCommandHandler {
 				"'234-432-9485',"+
 				"'Print and Go',"+
 				"'432 Letter Lane'"+
-				// TODO End Date
+				// TODO End Date 1-jun-2012
 				")");
 		
 		for (String sql : sqlArray) {
@@ -458,4 +453,68 @@ public class Setup extends AbstractCommandHandler {
 
 	}
 	
+	/**
+	 * Execute the commands to populate purchases from vendor table
+	 * 
+	 */
+	public void execPopP() throws SQLException {
+		ArrayList<String> sqlArray = new ArrayList<String>();
+
+		sqlArray.add("INSERT INTO Purchase VALUES ("+
+				"6001,"+
+				"'5-feb-2012',"+
+				"4001,"+ // ISBN 1234
+				"3001,"+ // Turners
+				"1003,"+ 
+				"10," + // qty
+				"'ordered',"+
+				"301" + // wholesale
+				// TODO date paid 26-feb-2012
+				")");
+		sqlArray.add("INSERT INTO Purchase VALUES ("+
+				"6002,"+
+				"'25-mar-2012',"+
+				"4002,"+ // ISBN 1235
+				"3002,"+ // Print and Go
+				"1003,"+ 
+				"12," + // qty
+				"'ordered',"+
+				"302" + // wholesale
+				// TODO date paid 17-arp-2012
+				")");
+		sqlArray.add("INSERT INTO Purchase VALUES ("+
+				"6003,"+
+				"'2-june-2012',"+
+				"4003,"+ // ISBN 1236
+				"3001,"+ // Print and Go
+				"1003,"+ 
+				"6," + // qty
+				"'ordered',"+
+				"303" + // wholesale
+				// TODO date paid 26-feb-2012
+				")");
+		sqlArray.add("INSERT INTO Purchase VALUES ("+
+				"6004,"+
+				"'1-oct-2012',"+
+				"4004,"+ // ISBN 1237
+				"3001,"+ // Turners
+				"1003,"+ 
+				"9," + // qty
+				"'ordered',"+
+				"304" + // wholesale
+				// TODO date paid 5-feb-2012
+				")");
+		
+		for (String sql : sqlArray) {
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			System.out.println(sql);
+			try {
+				statement.executeUpdate(sql);
+			} catch (Exception e) {
+				System.out.println(e.getMessage());
+			}
+		}
+
+	}
 }

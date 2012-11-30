@@ -44,7 +44,13 @@ public class Billing extends AbstractCommandHandler{
 	private SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
 
 
-	// Constructor
+	/*
+	 * // Constructor
+	 * 
+	 * Initializes the superclass then read prebuilt templates to
+	 * format the bill and payment documents.
+	 * 
+	 */
 	public Billing(Connection connection){
 		super(connection);
 		try {
@@ -63,8 +69,12 @@ public class Billing extends AbstractCommandHandler{
 		}
 	}
 
-
-
+	/*
+	 * readFile
+	 * 
+	 * Reads the template files
+	 * 
+	 */
 	private StringBuffer readFile(File billTemplate) throws FileNotFoundException, IOException {
 		FileReader reader = new FileReader(billTemplate);
 		BufferedReader br = new BufferedReader(reader);
@@ -80,7 +90,20 @@ public class Billing extends AbstractCommandHandler{
 		return buff;
 	}
 
-
+	/* 
+	 * execCustomer
+	 * 
+	 * Uses the customer id and optional date range to create a bill using the template
+	 * for all orders placed by the customer (within the date range if supplied).
+	 * 
+	 * @param custid
+	 * 	The customer id
+	 * @param argStartDate
+	 * 	The start date for the bill date range
+	 * @param argEndDate
+	 * 	The end date for the bill date range
+	 * 
+	 */
 	public void execCustomer(@Param("Customer Id") String custId,
 			@Param(value="Start Date", optional=true) String argStartDate) throws ValidationException, SQLException {
 
@@ -98,6 +121,7 @@ public class Billing extends AbstractCommandHandler{
 		try {
 			HashMap<String, String> subs = new HashMap<String, String>();
 
+			// fill in sections of the previously read templates
 			fillCustomerInfo(custIdValue, subs);
 			fillOrdersSection(custIdValue, argStartDate, subs);
 			fillBillTotal(custIdValue, subs);
@@ -111,18 +135,31 @@ public class Billing extends AbstractCommandHandler{
 			System.out.println("====");
 			System.out.println(bill);
 			System.out.println("====");
-			//Maybe optionally write it to file??  We can just pipe standard output to file anyway.
 
 		} catch (Exception e) {
 			usage();
 			System.out.println("Caught exception \n" + e.getLocalizedMessage());
+			return;
 		}
 
 		return;
 
 	}
 
-
+	/* 
+	 * exeVendor
+	 * 
+	 * Uses the vendor id and optional date range to create a bill using the template
+	 * for all purchases placed to the vendor (within the date range if supplied).
+	 * 
+	 * @param vendorId
+	 * 	The customer id
+	 * @param argStartDate
+	 * 	The start date for the bill date range
+	 * @param argEndDate
+	 * 	The end date for the bill date range
+	 * 
+	 */
 	public void execVendor(@Param("Vendor Id") String vendorId,
 			@Param(value="Start Date", optional=true) String argStartDate) throws ValidationException, SQLException {
 
@@ -140,7 +177,7 @@ public class Billing extends AbstractCommandHandler{
 		try {
 			HashMap<String, String> subs = new HashMap<String, String>();
 
-			// Creating a Vendor Payment
+			// Creating a Vendor Payment filling in the previously read template
 			fillVendorInfo(vendorIdValue, subs);
 			fillPurchasesSection(vendorIdValue, argStartDate, subs);
 			fillPaymentTotal(vendorIdValue,subs);
@@ -151,21 +188,30 @@ public class Billing extends AbstractCommandHandler{
 			for (String key : subs.keySet()) {
 				payment = payment.replaceAll("\\{"+key+"\\}", subs.get(key));
 			}
+
 			System.out.println("====");
 			System.out.println(payment);
 			System.out.println("====");
 
 		} catch (Exception e) {
 			usage();
-			e.printStackTrace();
-			exitProgram("Caught exception \n" + e.getLocalizedMessage());
+			System.out.println("Caught exception \n" + e.getLocalizedMessage());
+			return;
 		}
 
 		return;
 
 	}
 
+	/* 
+	 * fillBillTotal
+	 * 
+	 * Fills in the Total section of the bill template
+	 * 
+	 */
 	private void fillBillTotal(int id, HashMap<String, String> subs) throws SQLException {
+
+		// create the SQL statement to calculate the total
 		PreparedStatement totalStmt = prepareStatement("SELECT " +
 				"SUM(salePrice * quantity) AS subtotal, " +
 				"SUM(salePrice * quantity)*0.06 as tax, " +
@@ -175,9 +221,14 @@ public class Billing extends AbstractCommandHandler{
 				"AND orderId IN " +
 				"(SELECT DISTINCT id FROM Orders WHERE orderDate > ? AND CustomerId = ?)");
 		// TODO do I include paid status orders  AND status <> 'paid'
+
+		// fill in fields in SQL statement above
 		totalStmt.setDate(1, new Date(startDate.getTimeInMillis()));
 		totalStmt.setInt(2, id);
+
 		ResultSet set = totalStmt.executeQuery();
+
+		// create the output strings
 		if(set.next()){
 			subs.put("subtotal", "\\$"+new DecimalFormat("0.00").format(set.getDouble("subtotal")));
 			subs.put("tax", "\\$"+new DecimalFormat("0.00").format(set.getDouble("tax")));
@@ -188,33 +239,55 @@ public class Billing extends AbstractCommandHandler{
 			subs.put("total", "\\$0.00");
 		}
 
-
 	}
 
+	/* 
+	 * fillPaymentTotal
+	 * 
+	 * Fills in the Total section of the payment template
+	 * 
+	 */
 	private void fillPaymentTotal(int id, HashMap<String, String> subs) throws SQLException {
+
+		// create the SQL statement to calculate the total
 		PreparedStatement totalStmt = prepareStatement("SELECT SUM(wholesalePrice * quantity) AS total FROM Book b, Purchase p WHERE bookId = b.id AND p.id IN (SELECT DISTINCT id FROM Purchase WHERE orderDate > ? AND VendorId = ?)");    
+
+		// fill in fields in SQL statement above
 		totalStmt.setDate(1, new Date(startDate.getTimeInMillis()));
 		totalStmt.setInt(2, id);
+
 		ResultSet set = totalStmt.executeQuery();
+
+		// create the output strings
 		if(set.next()){
 			subs.put("total", "\\$"+new DecimalFormat("0.00").format(set.getDouble("total")));
 		} else {  // Still can produce a bill for no sales.
 			subs.put("total", "\\$0.00");
 		}
 
-
 	}
 
+	/* 
+	 * fillPurchasesSection
+	 * 
+	 * Fills in the items bought section of the purchases template
+	 * 
+	 */
 	private void fillPurchasesSection(int id, String argStartDate, HashMap<String, String> subs) throws ParseException,
 	SQLException {
 
+		// build the sql to get the orders
 		setupDates(argStartDate);
 		subs.put("billDate", format.format(billDate.getTime()));
 		PreparedStatement purchasesStmt = prepareStatement("SELECT title, author, quantity, wholesalePrice FROM Book b, Purchase p WHERE bookId = b.id AND p.id IN (SELECT DISTINCT id FROM Purchase WHERE orderDate > ? AND VendorId = ?)");
 
+		// fill in fields in the SQL 
 		purchasesStmt.setDate(1, new Date(startDate.getTimeInMillis()));
 		purchasesStmt.setInt(2, id);
+
 		ResultSet purchases = purchasesStmt.executeQuery();
+
+		// create strings for output
 		StringBuffer purchaseBuff = new StringBuffer();
 		purchaseBuff.append("#\tTitle\t\tAuthor\t\tPrice\n");
 		while (purchases.next()) {
@@ -231,9 +304,17 @@ public class Billing extends AbstractCommandHandler{
 		subs.put("purchaseList", purchaseBuff.toString());
 	}
 
+
+	/* 
+	 * fillOrdersSection
+	 * 
+	 * Fills in the orders section of the purchases template
+	 * 
+	 */
 	private void fillOrdersSection(int id, String argStartDate, HashMap<String, String> subs) throws ParseException,
 	SQLException {
 
+		// build the sql to get the orders
 		SimpleDateFormat format = setupDates(argStartDate);
 		subs.put("billDate", format.format(billDate.getTime()));
 		PreparedStatement purchasesStmt = prepareStatement(
@@ -242,10 +323,14 @@ public class Billing extends AbstractCommandHandler{
 						" WHERE bookId = id AND orderId IN " +
 				" (SELECT DISTINCT id FROM Orders WHERE orderDate > ? AND CustomerId = ?)");
 		// TODO do I include paid status orders  AND status <> 'paid'
-		
+
+		// fill in fields in the SQL
 		purchasesStmt.setDate(1, new Date(startDate.getTimeInMillis()));
 		purchasesStmt.setInt(2, id);
+
 		ResultSet purchases = purchasesStmt.executeQuery();
+
+		// create strings for output
 		StringBuffer purchaseBuff = new StringBuffer();
 		purchaseBuff.append("#\tTitle\t\tAuthor\t\tPrice\n");
 		while (purchases.next()) {
@@ -262,8 +347,11 @@ public class Billing extends AbstractCommandHandler{
 		subs.put("orderList", purchaseBuff.toString());
 	}
 
-
-
+	/* 
+	 * setupDates
+	 * 
+	 * Format dates for printing
+	 */
 	private SimpleDateFormat setupDates(String argStartDate) throws ParseException {
 
 		billDate = Calendar.getInstance();
@@ -292,10 +380,23 @@ public class Billing extends AbstractCommandHandler{
 		return format;
 	}
 
+	/*
+	 * fillVendorInfo
+	 * 
+	 * Fill in the section about the vendor in the purchases payment
+	 * 
+	 */
 	private void fillVendorInfo(int id, HashMap<String, String> subs) throws SQLException {
+
+		// create the SQL statement
 		PreparedStatement customerInfoStmt = prepareStatement("SELECT name, address, phone FROM Vendor WHERE id = ?");
+
+		// fill in vendor id
 		customerInfoStmt.setInt(1, id);
+
 		customerInfoStmt.execute();
+
+		// create the output strings for printings
 		subs.put("invoiceNumber", id + "-" + System.currentTimeMillis());  //pseudo unique bill identifier
 		ResultSet results = customerInfoStmt.getResultSet();
 		if(results.next()){
@@ -308,10 +409,23 @@ public class Billing extends AbstractCommandHandler{
 		}
 	}
 
+	/*
+	 * fillCustomerInfo
+	 * 
+	 * Fill in the section about the customer in the bill
+	 * 
+	 */
 	private void fillCustomerInfo(int id, HashMap<String, String> subs) throws SQLException {
+
+		// create the SQL statement
 		PreparedStatement customerInfoStmt = prepareStatement("SELECT name, address, phone FROM Customer WHERE id = ?");
+
+		// fill in customer id
 		customerInfoStmt.setInt(1, id);
+
 		customerInfoStmt.execute();
+
+		// create the output strings for printings
 		subs.put("invoiceNumber", id + "-" + System.currentTimeMillis());  //pseudo unique bill identifier
 		ResultSet results = customerInfoStmt.getResultSet();
 		if(results.next()){

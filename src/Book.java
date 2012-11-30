@@ -37,6 +37,8 @@ public class Book extends AbstractCommandHandler {
 	 * 
 	 * @param title
 	 *   The book title
+	 * @param isbn
+	 *   The book's ISBN number
 	 * @param author
 	 *   The book authors
 	 * @param retailPrice
@@ -45,6 +47,7 @@ public class Book extends AbstractCommandHandler {
 	public void execAdd(
 			@Param("title") String title, 
 			@Param("author") String author, 
+			@Param("ISBN") String isbn,
 			@Param("retail price") String retailPrice) throws SQLException {
 
 		// validate Book parameters
@@ -58,6 +61,7 @@ public class Book extends AbstractCommandHandler {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("title", title);
 		params.put("author", author);
+		params.put("ISBN", isbn);
 		params.put("retailPrice", Double.parseDouble(retailPrice));
 
 		int newID = insertRow(ValidationHelpers.TABLE_BOOK, "id", 4001, params);
@@ -114,16 +118,21 @@ public class Book extends AbstractCommandHandler {
 	 */
 	public void execList(@Param("book id") String id) throws SQLException {
 
+		int idVal = 0;
+		
 		// validate Book ID parameter
 		try {
-			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_BOOK);
+			idVal = ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_BOOK);
 		} catch (ValidationException ex) {
-			System.out.println("Validation Error: " + ex.getMessage());
-			return;
+			System.out.println("Books ID is not valid so trying Title or ISBN match");
 		}
 
 		// Select row in the Book table with ID
-		String sql = "SELECT * FROM " + ValidationHelpers.TABLE_BOOK + " WHERE id = "+ Integer.parseInt(id);
+		String sql = "SELECT * " +
+				"FROM " + ValidationHelpers.TABLE_BOOK + 
+				" WHERE id = "+ idVal +
+				" OR ISBN LIKE '%" + id + "%'" + 
+				" OR title LIKE '%" + id + "%'";
 
 		Statement statement = createStatement();
 		int cnt = displayBooks(statement.executeQuery(sql));
@@ -136,11 +145,13 @@ public class Book extends AbstractCommandHandler {
 	 * Update a Book with ID with the given values
 	 *
 	 * @param id
-	 *   The book id. Must be convertable to an integer.
+	 *   The book id. Must be convertible to an integer.
 	 * @param title
 	 *   The book title
 	 * @param author
 	 *   The book authors
+	 * @param isbn
+	 *   The books ISBN
 	 * @param retailPrice
 	 *   The retail price. Must be convertable to a double.
 	 * @param quantity
@@ -150,11 +161,12 @@ public class Book extends AbstractCommandHandler {
 			@Param("book id") String id, 
 			@Param("title") String title, 
 			@Param("author") String author,
+			@Param("ISBN") String isbn,
 			@Param("retail price") String retailPrice,
 			@Param("quantity") String quantity) throws SQLException {
 
 		// validate Book parameters
-		try {
+		try { 
 			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_BOOK);
 			checkPrice(retailPrice);
 			checkQty(quantity);
@@ -166,6 +178,7 @@ public class Book extends AbstractCommandHandler {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("title", title);
 		params.put("author", author);
+		params.put("ISBN", isbn);
 		params.put("retailPrice", Double.parseDouble(retailPrice));
 		params.put("stockQuantity", Integer.parseInt(quantity));
 
@@ -225,6 +238,7 @@ public class Book extends AbstractCommandHandler {
 			cnt++;
 			int id = result.getInt("id");
 			String title = result.getString("title");
+			String isbn = result.getString("ISBN");
 			String author = result.getString("author");
 			Double retailPrice = result.getDouble("retailPrice");
 			int stockQuantity = result.getInt("stockQuantity");
@@ -232,6 +246,7 @@ public class Book extends AbstractCommandHandler {
 					cnt+
 					"\tID: "+id+
 					"\tTitle: "+title+
+					"\tISBN: "+isbn+
 					"\tAuthor: "+author+
 					"\tPrice: $"+new DecimalFormat("0.00").format(retailPrice)+
 					"\tQty: "+stockQuantity

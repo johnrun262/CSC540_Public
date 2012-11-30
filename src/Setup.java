@@ -115,7 +115,8 @@ public class Setup extends AbstractCommandHandler {
 				"id INTEGER PRIMARY KEY NOT NULL,"+
 				"retailPrice INTEGER CHECK (retailPrice >= 0),"+
 				"stockQuantity INTEGER CHECK (stockQuantity >= 0),"+
-				"title VARCHAR(30) NOT NULL,"+
+				"title VARCHAR(50) NOT NULL,"+
+				"ISBN VARCHAR(30),"+
 				"author VARCHAR(30) NOT NULL "+
 				")");
 		sqlArray.add("CREATE TABLE Orders ("+
@@ -221,7 +222,7 @@ public class Setup extends AbstractCommandHandler {
 
 		sqlArray.add("INSERT INTO Staff VALUES ("+
 				"1001,"+
-				"'Mr. S. First',"+
+				"'Eddie Murphy',"+
 				"'M',"+
 				"'12-aug-1961',"+
 				"'"+JOB_M01+"',"+
@@ -233,7 +234,7 @@ public class Setup extends AbstractCommandHandler {
 				")");
 		sqlArray.add("INSERT INTO Staff VALUES ("+
 				"1002,"+
-				"'Mrs. S. Second',"+
+				"'Tina Fey',"+
 				"'F',"+
 				"'12-aug-1961',"+
 				"'"+JOB_M02+"',"+
@@ -246,7 +247,7 @@ public class Setup extends AbstractCommandHandler {
 
 		sqlArray.add("INSERT INTO Staff VALUES ("+
 				"1003,"+
-				"'Mr. S. Third',"+
+				"'George Carlin',"+
 				"'M',"+
 				"'12-may-1937',"+
 				"'"+JOB_S01+"',"+
@@ -258,7 +259,7 @@ public class Setup extends AbstractCommandHandler {
 				")");
 		sqlArray.add("INSERT INTO Staff VALUES ("+
 				"1004,"+
-				"'Mr. S. Forth',"+
+				"'Eddie Izzard',"+
 				"'M',"+
 				"'24-feb-1948',"+
 				"'"+JOB_M01+"',"+
@@ -270,7 +271,7 @@ public class Setup extends AbstractCommandHandler {
 				")");
 		sqlArray.add("INSERT INTO Staff VALUES ("+
 				"1005,"+
-				"'Mr. S. Fifth',"+
+				"'Richard Pryor',"+
 				"'M',"+
 				"'12-jun-1943',"+
 				"'"+JOB_S01+"',"+
@@ -282,7 +283,7 @@ public class Setup extends AbstractCommandHandler {
 				")");
 		sqlArray.add("INSERT INTO Staff VALUES ("+
 				"1006,"+
-				"'Mr. S. Sixth',"+
+				"'Sam Kinison',"+
 				"'M',"+
 				"'03-mar-1953',"+
 				"'"+JOB_S02+"',"+
@@ -378,6 +379,7 @@ public class Setup extends AbstractCommandHandler {
 				"4001,"+
 				"725,"+
 				"7,"+
+				"'Computer Networking',"+
 				"'ISBN 1234',"+
 				"'Robert Hooke'"+
 				")");
@@ -385,6 +387,7 @@ public class Setup extends AbstractCommandHandler {
 				"4002,"+
 				"650,"+
 				"10,"+
+				"'Operating System Concepts',"+
 				"'ISBN 1235',"+
 				"'Joe Bob'"+
 				")");		
@@ -392,6 +395,7 @@ public class Setup extends AbstractCommandHandler {
 				"4003,"+
 				"700,"+
 				"6,"+
+				"'Database Design',"+
 				"'ISBN 1236',"+
 				"'Author Fry'"+
 				")");
@@ -399,6 +403,7 @@ public class Setup extends AbstractCommandHandler {
 				"4004,"+
 				"5,"+
 				"6,"+
+				"'Taking over the world for dummies',"+
 				"'ISBN 1237',"+
 				"'Bill Gates'"+
 				")");		

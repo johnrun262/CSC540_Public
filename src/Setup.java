@@ -44,7 +44,7 @@ public class Setup extends AbstractCommandHandler {
 	public static String JOB_M01 = "M-Unit-01";
 	public static String JOB_M02 = "M-Unit-02";
 	public static String JOB_S01 = "S-Unit-01";
-	public static String JOB_S02 = "M-Unit-02";
+	public static String JOB_S02 = "S-Unit-02";
 
 	/**
 	 * Execute the command to create database

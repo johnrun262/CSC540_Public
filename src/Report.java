@@ -90,9 +90,13 @@ public class Report extends AbstractCommandHandler {
 			@Param(value="Begin Date", optional=true) String beginDate, 
 			@Param(value="End Date", optional=true) String endDate) throws SQLException {
 
-		// execute method in Sales that displays orders
-		Sale sale = new Sale(connection);
-		sale.execCustomer(customerId, beginDate, endDate);
+		try {
+			// execute method in Sales that displays orders
+			Sale sale = new Sale(connection);
+			sale.execCustomer(customerId, beginDate, endDate);
+		} catch (Exception e) {
+			System.out.println("Error Listing Customer Purchases"+ e.getMessage());
+		}
 
 		return;
 	} // execPurchaseHistory
@@ -130,12 +134,12 @@ public class Report extends AbstractCommandHandler {
 			System.out.println("Validation Error: " + ex.getMessage());
 			return;
 		}
-		
+
 		// execute method in Staf that displays Staff Members
 		System.out.println("Staff Member: ");
 		Staff staff = new Staff(connection);
 		staff.execList(staffId);
-		
+
 		// get list from orders table of customers served by staff member
 		System.out.println("Customers Served: ");
 
@@ -147,7 +151,7 @@ public class Report extends AbstractCommandHandler {
 		if (beginDate != null) {
 			where = where + "AND orderDate >= '"+ beginDate + "' ";	
 		}
-		
+
 		String sql = "SELECT DISTINCT customerId FROM Orders WHERE "+where+" Order by customerId";
 
 		try {
@@ -162,18 +166,18 @@ public class Report extends AbstractCommandHandler {
 			while (result.next()) {
 
 				int customerId = result.getInt("customerId");
-				
+
 				// execute method in Customers that displays customers
 				Customer cust = new Customer(connection);
 				cust.execList(Integer.toString(customerId));
 			}
 
 		} catch(Exception ex) {
-			System.out.println("Error Creating Sales History: " + ex.getMessage());
+			System.out.println("Error Creating Customers Served History: " + ex.getMessage());
 		}
 
 		return;
-		
+
 	} // execStaff
 
 	/*
@@ -237,46 +241,49 @@ public class Report extends AbstractCommandHandler {
 	 * Print report
 	 */
 
-	public void execRoles(@Param("Job Title") String jobTitle) throws SQLException {
+	public void execRoles(@Param(value="Job Title", optional=true) String jobTitle) throws SQLException {
 
-		String s1 = "SELECT * FROM Staff WHERE jobTitle LIKE '%";
-		// s2 = Staff role
-		String s3 = "%'";
-
-		String q = s1+jobTitle+s3;
-
-		// Test
-		System.out.println(q);
+		String where = "";
+		
+		// the user supplied a job title then select staff with titles like it
+		if (jobTitle != null) {
+			where = " Where jobTitle LIKE '%"+jobTitle+"%' ";
+		}
+		
+		// build the SQL statement to select a list of staff by job title
+		String sql = "SELECT id AS staffId, jobTitle FROM Staff "+ where +" Order by jobTitle";
 
 		try {
 			// Create a statement instance that will be sending
 			// your SQL statements to the DBMS
 			Statement statement = connection.createStatement();
+			ResultSet result = statement.executeQuery(sql);
 
-			ResultSet result = statement.executeQuery(q);
-
-			System.out.println(); // skip a line
+			String prevJobTitle = null;
+			
+			// Loop through the rows printing a row for each staff member
 			while (result.next()) {
 
-				int id = result.getInt("id");
-				String nam = result.getString("name");
-				String gen = result.getString("gender");
-				String dat = result.getString("dob");
-				String job = result.getString("jobTitle");
-				String dep = result.getString("department");
-				int sal = result.getInt("salary");
-				String pho = result.getString("phone");
-				String add = result.getString("address");
-
-				System.out.println(id + "  " + nam + " " + gen + " " + dat + "  " + job + " " + dep + " " + sal + " " + pho + " " + add);
+				int staffId = result.getInt("staffId");
+				jobTitle = result.getString("jobTitle");
+				
+				if (!jobTitle.equals(prevJobTitle)) {
+					System.out.println("Staff Members with JobTitle: "+ jobTitle);
+					System.out.println();
+					prevJobTitle = jobTitle;
+				}
+				
+				// execute method in Staff that displays staff
+				Staff staff = new Staff(connection);
+				staff.execList(Integer.toString(staffId));
 			}
 
 		} catch(Exception ex) {
-			System.out.println("Error Creating Vendor History: " + ex.getMessage());
+			System.out.println("Error Roles List: " + ex.getMessage());
 		}
 
 		return;
-		
+
 	} // execStaffRoles
 
 }

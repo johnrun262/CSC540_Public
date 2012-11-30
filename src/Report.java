@@ -90,6 +90,7 @@ public class Report extends AbstractCommandHandler {
 			@Param(value="Begin Date", optional=true) String beginDate, 
 			@Param(value="End Date", optional=true) String endDate) throws SQLException {
 
+		// execute method in Sales that displays orders
 		Sale sale = new Sale(connection);
 		sale.execCustomer(customerId, beginDate, endDate);
 
@@ -113,41 +114,58 @@ public class Report extends AbstractCommandHandler {
 	 * Print report
 	 */
 
-	public void execSales(@Param("Staff Id") String staffId, 
-			@Param("Begin Date") String beginDate, 
-			@Param("End Date") String endDate) throws SQLException {
+	public void execStaff(@Param("Staff Id") String staffId, 
+			@Param(value="Begin Date", optional=true) String beginDate, 
+			@Param(value="End Date", optional=true) String endDate) throws SQLException {
 
-		String s1 = "SELECT id, name, address, gender, dob, status, phone, ssn FROM Customer, (SELECT DISTINCT customerId cid FROM Orders WHERE staffId=";
-		// s2 = Staff ID like 1001
-		String s3 = " AND (orderDate >= '";
-		// s4 = Beginning date of date range like 24-dec-2011
-		String s5 = "' AND orderDate <= '";
-		// s6 = Ending data of date range like 22-oct-2012
-		String s7 = "')) WHERE id=cid";
+		int staffIdValue;
 
-		String q = s1+staffId+s3+beginDate+s5+endDate+s7;
+		// Validate the inputs
+		try {
+			staffIdValue = ValidationHelpers.checkId(connection, staffId, ValidationHelpers.TABLE_STAFF);
+			// says check DoB but validates date correct format
+			if (beginDate != null) ValidationHelpers.checkDateOfBirth(beginDate);
+			if (endDate != null) ValidationHelpers.checkDateOfBirth(endDate);
+		} catch (ValidationException ex) {
+			System.out.println("Validation Error: " + ex.getMessage());
+			return;
+		}
+		
+		// execute method in Staf that displays Staff Members
+		System.out.println("Staff Member: ");
+		Staff staff = new Staff(connection);
+		staff.execList(staffId);
+		
+		// get list from orders table of customers served by staff member
+		System.out.println("Customers Served: ");
 
-		// Test
-		System.out.println(q);
+		// build the where clause to select customer orders within date range (if supplied)
+		String where = "staffId=" + staffIdValue +" ";
+		if (endDate != null) {
+			where = where + "AND orderDate <= '"+ endDate + "' ";	
+		}
+		if (beginDate != null) {
+			where = where + "AND orderDate >= '"+ beginDate + "' ";	
+		}
+		
+		String sql = "SELECT DISTINCT customerId FROM Orders WHERE "+where+" Order by customerId";
 
 		try {
 			// Create a statement instance that will be sending
 			// your SQL statements to the DBMS
 			Statement statement = connection.createStatement();
 
-			ResultSet result = statement.executeQuery(q);
+			ResultSet result = statement.executeQuery(sql);
 
-			System.out.println(); // skip a line
+			// get a list of customers served by the staff member and then
+			// loop through list printing details of customer
 			while (result.next()) {
 
-				//String ord = result.getString("orderDate");
-				//int sid = result.getInt("staffId");
-				String snm = result.getString("name");
-				//int cid = result.getInt("cid");
-				//String cnm = result.getString("cname");
-
-				//System.out.println(ord + " " + sid + "  " + snm + "  " +  cid + "  " + cnm);
-				System.out.println(snm);
+				int customerId = result.getInt("customerId");
+				
+				// execute method in Customers that displays customers
+				Customer cust = new Customer(connection);
+				cust.execList(Integer.toString(customerId));
 			}
 
 		} catch(Exception ex) {
@@ -155,7 +173,8 @@ public class Report extends AbstractCommandHandler {
 		}
 
 		return;
-	} // execSalesAssist
+		
+	} // execStaff
 
 	/*
 	 * Method: execVendorContracts

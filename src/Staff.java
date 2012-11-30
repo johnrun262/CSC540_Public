@@ -163,8 +163,6 @@ public class Staff extends AbstractCommandHandler {
 		Statement statement = createStatement();
 		int cnt = displayStaff(statement.executeQuery(sql));
 
-		System.out.println(cnt+" Row(s) Returned");
-
 	}
 
 	/**
@@ -344,8 +342,7 @@ public class Staff extends AbstractCommandHandler {
 			String address = result.getString("address");
 			String workLoc = result.getString("workLocation");
 			System.out.println(
-					cnt+
-					"\tID: "+id+
+					"ID: "+id+
 					"\tName: "+name+
 					"\tPhone: "+phone+
 					"\tAddress: "+address+

@@ -153,16 +153,27 @@ public class Purchase extends AbstractCommandHandler {
 	 * Display the properties of a specific purchase record.
 	 *
 	 * @param id
-	 *   The purchase id. Must be convertable to an integer.
+	 *   The purchase id or staff id or book id.
+	 * @param id
+	 *   The begin date is an optional parameter to only list purchases after date
 	 */
-	public void execList(@Param("Purchase id") String id) throws SQLException {
-
+	public void execList(@Param("Purchase id") String id,
+			@Param(value="Begin Date", optional=true) String beginDate) throws SQLException {
+		
 		// check if the id is valid
 		try {
 			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_PURCHASE);
-		} catch (ValidationException e) {
-			System.out.println("Validation Error: " + e.getMessage());
-			return; 
+		} catch (ValidationException e1) {
+			try {
+			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_STAFF);
+			} catch (ValidationException e2) {
+				try {
+				ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_BOOK);
+				} catch (ValidationException e3) {
+					System.out.println("ID must be a valid Purchase, Staff, or Book Id");
+					return;
+				}
+			}
 		}
 
 		// Select row in the Staff table with ID
@@ -170,10 +181,17 @@ public class Purchase extends AbstractCommandHandler {
 				" FROM " + ValidationHelpers.TABLE_PURCHASE + 
 				", " + ValidationHelpers.TABLE_BOOK + 
 				", " + ValidationHelpers.TABLE_VENDOR + 
-				" WHERE "+ ValidationHelpers.TABLE_PURCHASE+".id = "+ Integer.parseInt(id) + 
+				" WHERE ("+ ValidationHelpers.TABLE_PURCHASE+".id = "+ id +
+				" OR "+ ValidationHelpers.TABLE_PURCHASE+".Staffid = "+ id +
+				" OR "+ ValidationHelpers.TABLE_PURCHASE+".Bookid = "+ id +") " +
 				" AND " + ValidationHelpers.TABLE_PURCHASE+".bookId = " + ValidationHelpers.TABLE_BOOK +".id"+
-				" AND " + ValidationHelpers.TABLE_PURCHASE+".vendorId = " + ValidationHelpers.TABLE_VENDOR +".id";;
+				" AND " + ValidationHelpers.TABLE_PURCHASE+".vendorId = " + ValidationHelpers.TABLE_VENDOR +".id";
 
+		if (beginDate != null) {
+			// add additional constrain on order date if present
+			sql = sql + " AND " + ValidationHelpers.TABLE_PURCHASE + ".orderDate >= '" + beginDate + "' ";
+		}
+		
 		Statement statement = createStatement();
 		int cnt = displayPurchase(statement.executeQuery(sql));
 

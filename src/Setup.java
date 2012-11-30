@@ -471,7 +471,7 @@ public class Setup extends AbstractCommandHandler {
 				"'5-feb-2012',"+
 				"4001,"+ // ISBN 1234
 				"3001,"+ // Turners
-				"1003,"+ 
+				"1001,"+ // Eddie M
 				"10," + // qty
 				"'paid',"+
 				"301," + // wholesale
@@ -482,7 +482,7 @@ public class Setup extends AbstractCommandHandler {
 				"'25-mar-2012',"+
 				"4002,"+ // ISBN 1235
 				"3002,"+ // Print and Go
-				"1003,"+ 
+				"1001,"+ // Eddie M
 				"12," + // qty
 				"'paid',"+
 				"302," + // wholesale
@@ -493,7 +493,7 @@ public class Setup extends AbstractCommandHandler {
 				"'2-june-2012',"+
 				"4003,"+ // ISBN 1236
 				"3002,"+ // Print and Go
-				"1003,"+ 
+				"1002,"+ // Tina F 
 				"6," + // qty
 				"'paid',"+
 				"303," + // wholesale
@@ -504,7 +504,7 @@ public class Setup extends AbstractCommandHandler {
 				"'1-oct-2012',"+
 				"4004,"+ // ISBN 1237
 				"3001,"+ // Turners
-				"1003,"+ 
+				"1002,"+ // Tina F
 				"9," + // qty
 				"'paid',"+
 				"304," + // wholesale

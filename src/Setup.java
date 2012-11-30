@@ -108,6 +108,7 @@ public class Setup extends AbstractCommandHandler {
 				"phone VARCHAR(12) NOT NULL,"+
 				"name VARCHAR(30) NOT NULL,"+ 
 				"address VARCHAR(255) NOT NULL," +
+				"startDate DATE NOT NULL, "+
 				"endDate DATE NOT NULL "+
 				")");
 		sqlArray.add("CREATE TABLE Book ("+
@@ -427,6 +428,7 @@ public class Setup extends AbstractCommandHandler {
 				"'505-435-1029',"+
 				"'Turners Inc.',"+
 				"'34 Page St',"+
+				"'10-jan-2012',"+
 				"'1-jun-2012'"+
 				")");
 
@@ -435,6 +437,7 @@ public class Setup extends AbstractCommandHandler {
 				"'234-432-9485',"+
 				"'Print and Go',"+
 				"'432 Letter Lane',"+
+				"'20-mar-2012',"+
 				"'20-sep-2012'"+
 				")");
 		

@@ -53,14 +53,18 @@ public class Vendor extends AbstractCommandHandler {
 			@Param("phone") String phone, 
 			@Param("address") String address) throws SQLException {
 
-		// Automatically set end date to one year from now
-		String sqlDate;
-		try {
+		// Automatically set start date today and end date to one year from now
+		String sqlStartDate;
+		String sqlEndDate;
+		try {			
+			SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
+			// begin date
 			Calendar now = new GregorianCalendar();
+			sqlStartDate = format.format(now.getTime());
+			// end date
 			Calendar yearFromNow = new GregorianCalendar();
 			yearFromNow.set(Calendar.YEAR, now.get(Calendar.YEAR)+1);
-			SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
-			sqlDate = format.format(yearFromNow.getTime());
+			sqlEndDate = format.format(yearFromNow.getTime());
 		} catch (Exception e){
 			System.out.println("Problem setting date of contract expiration: " + e.getMessage());
 			return;
@@ -69,7 +73,8 @@ public class Vendor extends AbstractCommandHandler {
 		params.put("name", name);
 		params.put("phone", phone);
 		params.put("address", address);
-		params.put("endDate", sqlDate);
+		params.put("startDate", sqlStartDate);
+		params.put("endDate", sqlEndDate);
 
 		int newID = insertRow(TABLE, "id", 3001, params);
 
@@ -143,7 +148,7 @@ public class Vendor extends AbstractCommandHandler {
 	}
 
 	/**
-	 * Update a Cendor with ID with the given values
+	 * Update a Vendor with ID with the given values
 	 *
 	 * @param id
 	 *   The vendor id. Must be convertable to an integer.
@@ -206,8 +211,10 @@ public class Vendor extends AbstractCommandHandler {
 			String name = result.getString("name");
 			String phone = result.getString("phone");
 			String address = result.getString("address");
+			Date startDate = result.getDate("StartDate");
 			Date endDate = result.getDate("endDate");
-			System.out.println(cnt+"\tID: "+id+"\tName: "+name+"\tPhone: "+phone+"\tAddress: "+address+"\tEnd Date: "+endDate);
+			System.out.println(cnt+"\tID: "+id+"\tName: "+name+"\tPhone: "+phone+
+					"\tAddress: "+address+"\tStart Date: "+startDate+"\tEnd Date: "+endDate);
 			System.out.println();
 		}
 		return cnt;

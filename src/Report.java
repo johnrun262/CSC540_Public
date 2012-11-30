@@ -194,35 +194,9 @@ public class Report extends AbstractCommandHandler {
 
 	public void execVendors() throws SQLException {
 
-		String s1 = "SELECT DISTINCT * FROM Vendor";
-
-		String q = s1;
-
-		// Test
-		System.out.println(q);
-
-		try {
-
-			// Create a statement instance that will be sending
-			// your SQL statements to the DBMS
-			Statement statement = connection.createStatement();
-
-			ResultSet result = statement.executeQuery(q);
-
-			System.out.println(); // skip a line
-			while (result.next()) {
-
-				int id = result.getInt("id");
-				String pho = result.getString("phone");
-				String nam = result.getString("name");
-				String add = result.getString("address");
-
-				System.out.println(id + "  " + pho + " " + nam + "  " + add);
-			}
-
-		} catch(Exception ex) {
-			System.out.println("Error Creating Vendor History: " + ex.getMessage());
-		}
+		// execute method in Vendors that displays all vendors
+		Vendor vendor = new Vendor(connection);
+		vendor.execAll();
 
 		return;
 

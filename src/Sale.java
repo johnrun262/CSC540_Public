@@ -480,7 +480,7 @@ public class Sale extends AbstractCommandHandler {
 
 			// display the line items for the order
 			System.out.println("Items ordered:");
-			String sql = "SELECT b.title AS bookTitle, b.id AS bookID, b.retailPrice, oi.salePrice, oi.quantity" +
+			String sql = "SELECT b.title AS bookTitle, b.id AS bookID, b.retailPrice, b.isbn AS ISBN, oi.salePrice, oi.quantity" +
 					" FROM " + ValidationHelpers.TABLE_ITEMORDER + " oi " +
 					" INNER JOIN " + ValidationHelpers.TABLE_BOOK + " b ON oi.bookId=b.id " +
 					" WHERE oi.orderId=" + id;
@@ -504,12 +504,13 @@ public class Sale extends AbstractCommandHandler {
 		while (result.next()) {
 			cnt++;
 			String book = result.getString("bookTitle");
+			String isbn = result.getString("ISBN");
 			int bookId = result.getInt("BookID");
 			double retail = result.getDouble("retailPrice");
 			double sale = result.getDouble("salePrice");
 			int qty = result.getInt("quantity");
 			System.out.println(
-					"\tBook: "+book+"("+bookId+")"+
+					"\tBook: "+book+"("+bookId+"/"+isbn+")"+
 							"\tRetail: $"+new DecimalFormat("0.00").format(retail)+
 							"\tSale: $"+new DecimalFormat("0.00").format(sale)+
 							"\tQty: "+qty+

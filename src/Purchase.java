@@ -132,7 +132,7 @@ public class Purchase extends AbstractCommandHandler {
 	 * @param id
 	 *   The purchase id. Must be convertable to an integer.
 	 */
-	public void execDelete(@Param("staff id") String id) throws SQLException {
+	public void execDelete(@Param("purchase id") String id) throws SQLException {
 
 		// check if the id is valid
 		try {
@@ -155,7 +155,7 @@ public class Purchase extends AbstractCommandHandler {
 	 * @param id
 	 *   The purchase id. Must be convertable to an integer.
 	 */
-	public void execList(@Param("staff id") String id) throws SQLException {
+	public void execList(@Param("Purchase id") String id) throws SQLException {
 
 		// check if the id is valid
 		try {

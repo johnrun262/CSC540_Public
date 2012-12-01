@@ -212,11 +212,12 @@ public class Stocks extends AbstractCommandHandler {
 			cnt++;
 			int bookId = result.getInt("bookId");
 			String title = result.getString("title");
+			String isbn = result.getString("ISBN");
 			int vendorId = result.getInt("vendorId");
 			String vendorName = result.getString("name");
 			String vendorPhone = result.getString("phone");
 
-			System.out.println(cnt+"\tBook: "+title+"("+bookId+")\tVendor : "+vendorName+"("+vendorId+")\tVendor Phone: "+vendorPhone);
+			System.out.println(cnt+"\tBook: "+title+"("+bookId+"/"+isbn+")\tVendor : "+vendorName+"("+vendorId+")\tVendor Phone: "+vendorPhone);
 			System.out.println();
 		}
 

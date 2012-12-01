@@ -446,6 +446,23 @@ public class Setup extends AbstractCommandHandler {
 				"'20-sep-2012'"+
 				")");
 		
+		sqlArray.add("INSERT INTO Stocks VALUES ("+
+				"4001,"+ // ISBN 1234
+				"3001"+ // Turner
+				")");
+		sqlArray.add("INSERT INTO Stocks VALUES ("+
+				"4004,"+ // ISBN 1237
+				"3001"+ // Turner
+				")");
+		sqlArray.add("INSERT INTO Stocks VALUES ("+
+				"4002,"+ // ISBN 1235
+				"3002"+ // Print and Go
+				")");
+		sqlArray.add("INSERT INTO Stocks VALUES ("+
+				"4003,"+  // ISBN 1236
+				"3002"+ // Print and Go
+				")");
+		
 		for (String sql : sqlArray) {
 			Statement statement = connection.createStatement();
 			statement.setQueryTimeout(10);

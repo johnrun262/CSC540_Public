@@ -218,12 +218,12 @@ public class Report extends AbstractCommandHandler {
 	public void execRoles(@Param(value="Job Title", optional=true) String jobTitle) throws SQLException {
 
 		String where = "";
-		
+
 		// the user supplied a job title then select staff with titles like it
 		if (jobTitle != null) {
 			where = " Where jobTitle LIKE '%"+jobTitle+"%' ";
 		}
-		
+
 		// build the SQL statement to select a list of staff by job title
 		String sql = "SELECT id AS staffId, jobTitle FROM Staff "+ where +" Order by jobTitle";
 
@@ -231,25 +231,57 @@ public class Report extends AbstractCommandHandler {
 			// Create a statement instance that will be sending
 			// your SQL statements to the DBMS
 			Statement statement = connection.createStatement();
-			ResultSet result = statement.executeQuery(sql);
+			ResultSet resultStaff = statement.executeQuery(sql);
 
 			String prevJobTitle = null;
-			
-			// Loop through the rows printing a row for each staff member
-			while (result.next()) {
+			Double avg=0.0;
+			Double max=0.0;
+			Double min=0.0;
 
-				int staffId = result.getInt("staffId");
-				jobTitle = result.getString("jobTitle");
-				
+			// Loop through the rows printing a row for each staff member
+			while (resultStaff.next()) {
+
+				int staffId = resultStaff.getInt("staffId");
+				jobTitle = resultStaff.getString("jobTitle");
+
 				if (!jobTitle.equals(prevJobTitle)) {
+
+					// print the average, min, and max for the prevJobTitle
+					if (prevJobTitle != null) {
+						System.out.println("Salary Summary for "+prevJobTitle+" Average: $"+avg+" Max: $"+max+" Min: $"+min);
+					}
+
+					// print subheading for next jobTitle
+					System.out.println();
 					System.out.println("Staff Members with JobTitle: "+ jobTitle);
 					System.out.println();
+
+					// get and save the max, min, and average salaries for this jobtitle
+					// build the SQL statement to select a list of staff by job title
+					where = " Where jobTitle LIKE '%"+jobTitle+"%' ";
+					sql = "SELECT MAX(salary) AS MAX, MIN(salary) AS MIN, AVG(salary) AS AVG "+
+							" FROM Staff "+ where;
+
+					statement = connection.createStatement();
+					ResultSet resultSummary = statement.executeQuery(sql);
+
+					if (resultSummary.next()) {
+						avg = resultSummary.getDouble("AVG");
+						max = resultSummary.getDouble("MAX");
+						min = resultSummary.getDouble("MIN");
+					}
+
 					prevJobTitle = jobTitle;
-				}
-				
+				} // while
+
 				// execute method in Staff that displays staff
 				Staff staff = new Staff(connection);
 				staff.execList(Integer.toString(staffId));
+			}
+
+			// print the average, min, and max for the last JobTitle
+			if (prevJobTitle != null) {
+				System.out.println("Summary for "+prevJobTitle+" Average: "+avg+" Max: "+max+" Min: "+min);
 			}
 
 		} catch(Exception ex) {

@@ -71,12 +71,12 @@ public class Sale extends AbstractCommandHandler {
 			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_ORDERS);
 		} catch (ValidationException e1) {
 			try {
-			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_STAFF);
+				ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_STAFF);
 			} catch (ValidationException e2) {
 				try {
-				ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_CUSTOMER);
+					ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_CUSTOMER);
 				} catch (ValidationException e3) {
-					System.out.println("ID must be a valid Sale, Staff, or Book Id");
+					System.out.println("ID must be a valid Sale, Staff, or Customer Id");
 					return;
 				}
 			}
@@ -91,7 +91,7 @@ public class Sale extends AbstractCommandHandler {
 			// add additional constrain on order date if present
 			where = where + " AND o.orderDate >= '" + beginDate + "' ";
 		}
-		
+
 		// Select row in the Book table with ID
 		String sql = getOrderSql(where);
 
@@ -132,16 +132,16 @@ public class Sale extends AbstractCommandHandler {
 		if (beginDate != null) {
 			where = where + "AND o.orderDate >= '"+ beginDate + "' ";	
 		}
-		
+
 		// Select row in the Book table with ID
 		String sql = getOrderSql(where);
-	
+
 		// Display order-level info.
 		Statement statement = createStatement();
 		displayOrders(statement.executeQuery(sql));
 
 	}
-	
+
 	/**
 	 * Create a customer sale.
 	 *
@@ -387,33 +387,52 @@ public class Sale extends AbstractCommandHandler {
 	 * Delete the specified order
 	 *
 	 * @param id
-	 *   The order id. Must be convertable to an integer.
+	 *   The order id. Must be convertible to an integer.
 	 */
 	public void execDelete(@Param("order id") String id) throws SQLException  {
 
-		// Require consistency across multiple queries via serialized transaction isolation
-		connection.setAutoCommit(false);
-		connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+		int orderId;
 
-		int orderId = Integer.parseInt(id);
-		// Check the order and determine if it has been shipped. Disallow if true
-		String orderStatus = getOrderStatus(orderId);
-		if (orderStatus.equals(STATUS_SHIPPED)) {
-			// Sorry, you can't delete an order that already shipped to the customer.
-			exitProgram("Order " + orderId + " could not be deleted. It has already been shipped!");
+		// check if the id is valid
+		try {
+			orderId = ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_ORDERS);
+		} catch (ValidationException e3) {
+			System.out.println("ID must be a valid Order Id");
+			return;
+
 		}
 
+		try {
+			// Require consistency via serialized transaction isolation
+			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 
-		// TODO: Do we need to increase the stock quantity of books in this order, or are they only reduced when shipped?
+			// Check the order and determine if it has been shipped. Disallow if true
+			String orderStatus = getOrderStatus(orderId);
+			if (orderStatus.equals(STATUS_SHIPPED)) {
+				// Sorry, you can't delete an order that already shipped to the customer.
+				System.out.println("Order " + orderId + " could not be deleted. It has already been shipped!");
+				return;
+			}
 
-		// Delete the order, let SQL cascade delete the order items.
-		int count = deleteRow(ValidationHelpers.TABLE_ORDERS, orderId);
+			// since this is in a transaction no one can ship before we start the delete process
 
-		// Commit the transaction.
-		connection.commit();
+			// Add quantity to quantity of book for orderItems that will be deleted
+			replaceInStock(orderId);
 
-		System.out.println("Deleted "+ count + " Order with ID " + id + " from Database"); 
+			// deleteRow() will delete a row in the orders table and
+			// Possibly multiple rows in the itemOrders table.
+			// It will throw an exception if it encounters a problem
+			int count = deleteRow(ValidationHelpers.TABLE_ORDERS, orderId);
 
+			// Commit the transaction.
+			connection.commit();
+
+			System.out.println("Deleted "+ count + " Order with ID " + id + " from Database"); 
+		} catch (Exception e) {
+			connection.rollback();
+			System.out.println("Error while deleting order: " + e.getMessage());
+		}
 	}
 
 	/**
@@ -428,7 +447,7 @@ public class Sale extends AbstractCommandHandler {
 			@Param(value="status", optional=true) String status) throws ValidationException, SQLException {
 
 		int orderIDValue;
-		
+
 		// validate input parameters
 		try {
 			// check the purchase record id is numeric and in database
@@ -442,12 +461,12 @@ public class Sale extends AbstractCommandHandler {
 		Date todaysDate = new java.util.Date();
 		SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
 		String date = formatter.format(todaysDate);
-		
+
 		// status not supplied then it is paid
 		if (status == null) {
 			status = "paid";
 		}
-		
+
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", purId);
 		params.put("paidDate", date);
@@ -467,6 +486,35 @@ public class Sale extends AbstractCommandHandler {
 		if (whereClause != null) sql += " WHERE " + whereClause;
 		sql += " ORDER BY o.id";
 		return sql;
+	}
+ 
+	/*
+	* The quantity of a canceled order needs to be replaced in stock 
+	*/
+	private void replaceInStock(int orderId) throws SQLException {
+
+		// SQL to generate a list of book ids and the quantiy in the given order
+		String sql = "SELECT b.id AS bookId, oi.quantity" +
+				" FROM " + ValidationHelpers.TABLE_ITEMORDER + " oi " +
+				" INNER JOIN " + ValidationHelpers.TABLE_BOOK + " b ON oi.bookId=b.id " +
+				" WHERE oi.orderId=" + orderId;
+
+		Statement statement = connection.createStatement();
+		ResultSet result = statement.executeQuery(sql);
+		
+		// loop through all books in order and increase stock quantity
+		while (result.next()) {
+			int bookId = result.getInt("BookID");
+			int qty = result.getInt("quantity");
+			
+			sql = "UPDATE "+ValidationHelpers.TABLE_BOOK+" SET stockQuantity = stockQuantity + " + qty  +  
+					" Where Id="+ bookId;
+
+			statement = connection.createStatement();
+			statement.setQueryTimeout(10);
+			statement.executeUpdate(sql);	
+		}
+
 	}
 
 	/**
@@ -539,7 +587,7 @@ public class Sale extends AbstractCommandHandler {
 
 			grandTotal += (sale*qty);
 		}
-		
+
 		System.out.println();
 		System.out.println("ORDER TOTAL $" + new DecimalFormat("0.00").format(grandTotal));
 		System.out.println();

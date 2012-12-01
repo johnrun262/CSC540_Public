@@ -198,10 +198,15 @@ public class Sale extends AbstractCommandHandler {
 			params.put("customerId", customerId);
 			params.put("status", STATUS_ORDERED);
 			params.put("orderDate", new java.sql.Date(now.getTime()));
+			
+			// Insert order customer, staff, date into orders table
+			// Items will be added to order below
+			// Throws exception if fails
 			int orderId = insertRow(ValidationHelpers.TABLE_ORDERS, "id", 5001, params, true);
 
 			// add the item to the order after checking there is sufficient stock. 
 			// Then, decrease the stock
+			// Throws exception if fails
 			addItemOrder (bookId, orderId, orderQuantity, price);
 
 			// Commit the transaction
@@ -292,6 +297,7 @@ public class Sale extends AbstractCommandHandler {
 	private void addItemOrder (int bookId, int orderId, int orderQuantity, double price) 
 			throws ValidationException, SQLException {
 
+		// check there is enough in stock to fill the order
 		String sql = "SELECT * FROM "+ValidationHelpers.TABLE_BOOK+" Where Id="+bookId;
 
 		Statement statement = connection.createStatement();

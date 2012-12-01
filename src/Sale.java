@@ -59,22 +59,41 @@ public class Sale extends AbstractCommandHandler {
 	 * Display the properties of a specific order.
 	 *
 	 * @param id
-	 *   The order id. Must be convertable to an integer.
+	 *   The order id. Must be convertible to an integer.
+	 * @param id
+	 *   The begin date is an optional parameter to only list sales after date
 	 */
-	public void execList(@Param("order id") String id) throws SQLException {
-		int orderId;
+	public void execList(@Param("id") String id,
+			@Param(value="Begin Date", optional=true) String beginDate) throws SQLException {
 
-		// Validate the inputs
+		// check if the id is valid
 		try {
-			orderId = ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_ORDERS);
-
-		} catch (ValidationException ex) {
-			System.out.println("Validation Error: " + ex.getMessage());
-			return;
+			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_ORDERS);
+		} catch (ValidationException e1) {
+			try {
+			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_STAFF);
+			} catch (ValidationException e2) {
+				try {
+				ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_CUSTOMER);
+				} catch (ValidationException e3) {
+					System.out.println("ID must be a valid Sale, Staff, or Book Id");
+					return;
+				}
+			}
 		}
 
+		// Select row in the Staff table with ID
+		String where = "  (o.id = "+ id +
+				" OR o.Staffid = "+ id +
+				" OR o.customerid = "+ id +") ";
+
+		if (beginDate != null) {
+			// add additional constrain on order date if present
+			where = where + " AND o.orderDate >= '" + beginDate + "' ";
+		}
+		
 		// Select row in the Book table with ID
-		String sql = getOrderSql("o.id=" + orderId);
+		String sql = getOrderSql(where);
 
 		// Display order-level info.
 		Statement statement = createStatement();

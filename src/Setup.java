@@ -563,7 +563,7 @@ public class Setup extends AbstractCommandHandler {
 		
 		sqlArray.add("INSERT INTO Orders VALUES ("+
 				"5003,"+
-				"1003,"+
+				"1005,"+
 				"2003,"+
 				"'paid',"+
 				"'9-mar-2012',"+
@@ -578,7 +578,7 @@ public class Setup extends AbstractCommandHandler {
 		
 		sqlArray.add("INSERT INTO Orders VALUES ("+
 				"5004,"+
-				"1003,"+
+				"1006,"+
 				"2004,"+
 				"'paid',"+
 				"'24-aug-2012',"+

@@ -129,23 +129,23 @@ public class Purchase extends AbstractCommandHandler {
 	/**
 	 * Delete the specified purchase record
 	 *
-	 * @param id
+	 * @param purchaseid
 	 *   The purchase id. Must be convertable to an integer.
 	 */
-	public void execDelete(@Param("purchase id") String id) throws SQLException {
+	public void execDelete(@Param("purchase id") String purchaseId) throws SQLException {
 
 		// check if the id is valid
 		try {
-			ValidationHelpers.checkId(connection, id, ValidationHelpers.TABLE_PURCHASE);
+			ValidationHelpers.checkId(connection, purchaseId, ValidationHelpers.TABLE_PURCHASE);
 		} catch (ValidationException e) {
 			System.out.println("Validation Error: " + e.getMessage());
 			return;
 		}
 
 		// do the delete
-		int count = deleteRow(ValidationHelpers.TABLE_PURCHASE, Integer.parseInt(id));
+		int count = deleteRow(ValidationHelpers.TABLE_PURCHASE, Integer.parseInt(purchaseId));
 
-		System.out.println("Deleted "+ count + " Staff with ID " + id + " from Database"); 
+		System.out.println("Deleted "+ count + " Purchase Orders with ID " + purchaseId + " from Database"); 
 
 	} // exec delete
 
@@ -329,7 +329,7 @@ public class Purchase extends AbstractCommandHandler {
 	 * @param id
 	 *   The purchase id. Must be convertable to an integer.
 	 */
-	public void execRec(@Param("id") String purId) throws ValidationException, SQLException {
+	public void execRec(@Param("purchase id") String purId) throws ValidationException, SQLException {
 
 		String purStatus = null;
 		int quantity = 0;
@@ -374,7 +374,7 @@ public class Purchase extends AbstractCommandHandler {
 
 
 			// Add quantity to quantity of book
-			sql = "UPDATE "+ValidationHelpers.TABLE_PURCHASE+" SET stockQuantity = stockQuantity + "+ quantity + " Where Id="+ bookId;
+			sql = "UPDATE "+ValidationHelpers.TABLE_BOOK+" SET stockQuantity = stockQuantity + "+ quantity + " Where Id="+ bookId;
 
 			statement = connection.createStatement();
 			statement.setQueryTimeout(10);
